@@ -13,6 +13,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
+import { buildThemeInitScript } from "@/lib/theme";
+
+const themeInitScript = buildThemeInitScript();
 
 function NotFoundComponent() {
   return (
@@ -109,6 +112,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body>

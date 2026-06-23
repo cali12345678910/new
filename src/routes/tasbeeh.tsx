@@ -7,7 +7,11 @@ export const Route = createFileRoute("/tasbeeh")({
   head: () => ({
     meta: [
       { title: "المسبحة | Tasbeeh — Al-Maqam" },
-      { name: "description", content: "A premium digital tasbeeh — count your dhikr with luxurious golden visuals and daily totals." },
+      {
+        name: "description",
+        content:
+          "A premium digital tasbeeh — count your dhikr with luxurious golden visuals and daily totals.",
+      },
     ],
   }),
   component: TasbeehPage,
@@ -27,8 +31,13 @@ type TState = { count: number; preset: number; total: number };
 
 function load(): TState {
   if (typeof window === "undefined") return { count: 0, preset: 0, total: 0 };
-  try { return (JSON.parse(localStorage.getItem(KEY) || "") as TState) || { count: 0, preset: 0, total: 0 }; }
-  catch { return { count: 0, preset: 0, total: 0 }; }
+  try {
+    return (
+      (JSON.parse(localStorage.getItem(KEY) || "") as TState) || { count: 0, preset: 0, total: 0 }
+    );
+  } catch {
+    return { count: 0, preset: 0, total: 0 };
+  }
 }
 
 function TasbeehPage() {
@@ -39,20 +48,30 @@ function TasbeehPage() {
   const inCycle = state.count % preset.target;
   const pct = (inCycle / preset.target) * 100;
 
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify(state)); }, [state]);
+  useEffect(() => {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }, [state]);
 
   function tap() {
     if ("vibrate" in navigator) navigator.vibrate?.(15);
     setState((s) => ({ ...s, count: s.count + 1, total: s.total + 1 }));
   }
-  function reset() { setState((s) => ({ ...s, count: 0 })); }
-  function pickPreset(i: number) { setState((s) => ({ ...s, preset: i, count: 0 })); }
+  function reset() {
+    setState((s) => ({ ...s, count: 0 }));
+  }
+  function pickPreset(i: number) {
+    setState((s) => ({ ...s, preset: i, count: 0 }));
+  }
 
   return (
     <div className="space-y-4">
       <header className="rounded-3xl gold-border gold-gradient card-shadow p-5 text-center">
-        <h1 className="font-display text-2xl gold-text">{lang === "ar" ? "المسبحة الإلكترونية" : "Digital Tasbeeh"}</h1>
-        <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "اضغط لتسبح" : "Tap to count"}</p>
+        <h1 className="font-display text-2xl gold-text">
+          {lang === "ar" ? "المسبحة الإلكترونية" : "Digital Tasbeeh"}
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          {lang === "ar" ? "اضغط لتسبح" : "Tap to count"}
+        </p>
       </header>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -61,7 +80,9 @@ function TasbeehPage() {
             key={i}
             onClick={() => pickPreset(i)}
             className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition ${
-              i === state.preset ? "bg-primary text-primary-foreground" : "bg-card gold-border hover:bg-accent"
+              i === state.preset
+                ? "bg-primary text-primary-foreground"
+                : "bg-card gold-border hover:bg-accent"
             }`}
           >
             <span className={lang === "ar" ? "arabic" : ""}>{lang === "ar" ? p.ar : p.en}</span>
@@ -97,7 +118,10 @@ function TasbeehPage() {
         </div>
 
         <div className="mt-5 flex items-center justify-center gap-2">
-          <button onClick={reset} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm hover:bg-accent">
+          <button
+            onClick={reset}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm hover:bg-accent"
+          >
             <RotateCcw className="size-4" /> {lang === "ar" ? "تصفير" : "Reset"}
           </button>
           <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
