@@ -1,0 +1,146 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --font-display: var(--font-display);
+  --font-arabic: var(--font-arabic);
+}
+
+:root {
+  --radius: 0.875rem;
+
+  /* Ultra-luxury matte black + 26k gold — Al-Maqam */
+  --background: #0a0a0a;
+  --foreground: #f5e9c8;
+
+  --card: #111111;
+  --card-foreground: #f5e9c8;
+  --popover: #0f0f0f;
+  --popover-foreground: #f5e9c8;
+
+  --gold-deep: #8a6b1a;
+  --gold: #D4AF37;
+  --gold-bright: #FFD700;
+
+  --primary: #D4AF37;
+  --primary-foreground: #0a0a0a;
+
+  --secondary: #161616;
+  --secondary-foreground: #f5e9c8;
+  --muted: #141414;
+  --muted-foreground: #b8a96b;
+  --accent: #1c1710;
+  --accent-foreground: #f5e9c8;
+
+  --destructive: oklch(0.58 0.18 28);
+  --destructive-foreground: #fff;
+
+  --border: rgba(212, 175, 55, 0.18);
+  --input: rgba(212, 175, 55, 0.22);
+  --ring: #D4AF37;
+
+  --font-display: "Cairo", "Amiri", "Cormorant Garamond", Georgia, serif;
+  --font-arabic: "Amiri Quran", "Amiri", "Cairo", "Scheherazade New", "Noto Naskh Arabic", serif;
+}
+
+.dark { color-scheme: dark; }
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { height: 100%; background: #0a0a0a; }
+  body {
+    color: var(--color-foreground);
+    font-family: "Cairo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: #0a0a0a;
+    background-image:
+      radial-gradient(1200px 700px at 0% -10%, rgba(212,175,55,0.10), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(255,215,0,0.06), transparent 55%),
+      radial-gradient(800px 600px at 50% 110%, rgba(212,175,55,0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.005em; }
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { font-family: var(--font-arabic); letter-spacing: 0; }
+  .arabic { font-family: var(--font-arabic); line-height: 2.1; }
+  ::selection { background: rgba(212,175,55,0.35); color: #fff; }
+}
+
+@utility gold-border {
+  border: 1px solid rgba(212, 175, 55, 0.28);
+}
+@utility gold-border-strong {
+  border: 1px solid rgba(212, 175, 55, 0.55);
+}
+@utility gold-gradient {
+  background-image: linear-gradient(135deg,
+    rgba(212,175,55,0.12) 0%,
+    rgba(20,20,20,0.92) 35%,
+    rgba(15,15,15,0.95) 65%,
+    rgba(255,215,0,0.10) 100%);
+}
+@utility gold-fill {
+  background-image: linear-gradient(135deg, #8a6b1a 0%, #D4AF37 45%, #FFD700 70%, #f5e9c8 100%);
+}
+@utility gold-text {
+  background: linear-gradient(135deg, #8a6b1a 0%, #D4AF37 35%, #FFD700 65%, #f5e9c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility card-shadow {
+  box-shadow:
+    0 1px 0 rgba(212, 175, 55, 0.25) inset,
+    0 0 0 1px rgba(0,0,0,0.4),
+    0 18px 50px -22px rgba(0, 0, 0, 0.9),
+    0 0 36px -18px rgba(212,175,55,0.35);
+}
+@utility gold-glow {
+  box-shadow: 0 0 24px rgba(212,175,55,0.45), 0 0 72px rgba(255,215,0,0.18);
+}
+@utility ornament { position: relative; }
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.55), 0 0 24px rgba(212,175,55,0.25); }
+  50% { box-shadow: 0 0 0 12px rgba(212,175,55,0), 0 0 36px rgba(255,215,0,0.45); }
+}
+.animate-gold-pulse { animation: goldPulse 2.4s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-gold {
+  background: linear-gradient(90deg, transparent, rgba(255,215,0,0.35), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
