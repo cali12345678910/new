@@ -86,7 +86,9 @@ function load(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {}
+  } catch {
+    /* ignore */
+  }
   return DEFAULT_SETTINGS;
 }
 

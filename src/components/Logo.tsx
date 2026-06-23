@@ -22,10 +22,25 @@ export function Logo({ size = 40, withText = false }: { size?: number; withText?
           </radialGradient>
         </defs>
         {/* matte black rounded backdrop */}
-        <rect x="1" y="1" width="62" height="62" rx="14" fill="#0a0a0a" stroke="url(#alm-gold)" strokeWidth="1.2" />
+        <rect
+          x="1"
+          y="1"
+          width="62"
+          height="62"
+          rx="14"
+          fill="#0a0a0a"
+          stroke="url(#alm-gold)"
+          strokeWidth="1.2"
+        />
         <circle cx="32" cy="22" r="14" fill="url(#alm-glow)" />
         {/* 8-point geometric Islamic star */}
-        <g transform="translate(32 22)" stroke="url(#alm-gold)" strokeWidth="1.4" fill="none" strokeLinejoin="round">
+        <g
+          transform="translate(32 22)"
+          stroke="url(#alm-gold)"
+          strokeWidth="1.4"
+          fill="none"
+          strokeLinejoin="round"
+        >
           <polygon points="0,-11 2.6,-2.6 11,0 2.6,2.6 0,11 -2.6,2.6 -11,0 -2.6,-2.6" />
           <polygon
             points="0,-11 2.6,-2.6 11,0 2.6,2.6 0,11 -2.6,2.6 -11,0 -2.6,-2.6"

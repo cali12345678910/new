@@ -17,7 +17,11 @@ export function RadialCountdown({
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+      <svg
+        width={size}
+        height={size}
+        className="-rotate-90 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]"
+      >
         <defs>
           <linearGradient id="rc-gold" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#8a6b1a" />
@@ -27,13 +31,17 @@ export function RadialCountdown({
           </linearGradient>
         </defs>
         <circle
-          cx={size / 2} cy={size / 2} r={r}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
           fill="none"
           stroke="rgba(212,175,55,0.12)"
           strokeWidth={stroke}
         />
         <circle
-          cx={size / 2} cy={size / 2} r={r}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
           fill="none"
           stroke="url(#rc-gold)"
           strokeWidth={stroke}
