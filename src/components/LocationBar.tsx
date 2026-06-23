@@ -28,7 +28,11 @@ export function LocationBar({ loc, onChange }: { loc: Loc; onChange: (l: Loc) =>
     e.preventDefault();
     if (!q.trim()) return;
     setBusy(true);
-    try { setResults(await searchPlace(q.trim())); } finally { setBusy(false); }
+    try {
+      setResults(await searchPlace(q.trim()));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -53,7 +57,11 @@ export function LocationBar({ loc, onChange }: { loc: Loc; onChange: (l: Loc) =>
             disabled={busy}
             className="w-full inline-flex justify-center items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
           >
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <LocateFixed className="size-4" />}
+            {busy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <LocateFixed className="size-4" />
+            )}
             {t("detect_location")}
           </button>
           <form onSubmit={doSearch} className="flex gap-2">
@@ -72,7 +80,13 @@ export function LocationBar({ loc, onChange }: { loc: Loc; onChange: (l: Loc) =>
               {results.map((r, i) => (
                 <li key={i}>
                   <button
-                    onClick={() => { saveLocation(r); onChange(r); setOpen(false); setResults([]); setQ(""); }}
+                    onClick={() => {
+                      saveLocation(r);
+                      onChange(r);
+                      setOpen(false);
+                      setResults([]);
+                      setQ("");
+                    }}
                     className="w-full text-start px-3 py-2 text-sm hover:bg-accent"
                   >
                     {r.label}

@@ -39,14 +39,21 @@ export function playAthan(opts?: { muezzinId?: string; volume?: number }) {
   const a = new Audio(url);
   a.volume = Math.max(0, Math.min(1, vol));
   a.preload = "auto";
-  a.play().catch(() => {/* user gesture required */});
+  a.play().catch(() => {
+    /* user gesture required */
+  });
   currentAudio = a;
   return a;
 }
 
 export function stopAthan() {
   if (currentAudio) {
-    try { currentAudio.pause(); currentAudio.currentTime = 0; } catch {}
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
     currentAudio = null;
   }
 }
@@ -56,7 +63,9 @@ export function scheduleAthan(timings: Timings, lang: "ar" | "en") {
   const now = Date.now();
   (Object.keys(NAME) as PrayerKey[]).forEach((key) => {
     if (key === "Sunrise") return;
-    const [h, m] = cleanTime(timings[key]).split(":").map((x) => parseInt(x, 10));
+    const [h, m] = cleanTime(timings[key])
+      .split(":")
+      .map((x) => parseInt(x, 10));
     const at = new Date();
     at.setHours(h, m, 0, 0);
     const tag = `${at.toDateString()}-${key}`;
@@ -67,11 +76,19 @@ export function scheduleAthan(timings: Timings, lang: "ar" | "en") {
       fired.add(tag);
       playAthan();
       try {
-        new Notification(lang === "ar" ? `حان الآن وقت ${NAME[key].ar}` : `It's time for ${NAME[key].en}`, {
-          body: lang === "ar" ? "حيّ على الصلاة • حيّ على الفلاح" : "Hayya 'ala as-salah • Hayya 'ala al-falah",
-          silent: false,
-        });
-      } catch {}
+        new Notification(
+          lang === "ar" ? `حان الآن وقت ${NAME[key].ar}` : `It's time for ${NAME[key].en}`,
+          {
+            body:
+              lang === "ar"
+                ? "حيّ على الصلاة • حيّ على الفلاح"
+                : "Hayya 'ala as-salah • Hayya 'ala al-falah",
+            silent: false,
+          },
+        );
+      } catch {
+        /* ignore */
+      }
     }, delay);
     timers.push(id);
   });
@@ -79,7 +96,9 @@ export function scheduleAthan(timings: Timings, lang: "ar" | "en") {
 
 export function playChime() {
   try {
-    const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+    const AC =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     const ctx = new AC();
     const now = ctx.currentTime;
     const tones = [523.25, 659.25, 783.99, 1046.5];
@@ -96,5 +115,7 @@ export function playChime() {
       o.stop(now + i * 0.35 + 0.6);
     });
     setTimeout(() => ctx.close(), 3000);
-  } catch {}
+  } catch {
+    /* ignore */
+  }
 }

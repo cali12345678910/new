@@ -40,7 +40,7 @@
 :root {
   --radius: 0.875rem;
 
-  /* Ultra-luxury matte black + 26k gold — Al-Maqam */
+  /* Ultra-luxury matte black + 26k gold — Al-Maqam (theme-driven; see theme.ts) */
   --background: #0a0a0a;
   --foreground: #f5e9c8;
 
@@ -49,11 +49,14 @@
   --popover: #0f0f0f;
   --popover-foreground: #f5e9c8;
 
+  /* Accent triplet (space-separated rgb so it can power rgb(var() / alpha)). */
+  --accent-rgb: 212 175 55;
   --gold-deep: #8a6b1a;
-  --gold: #D4AF37;
-  --gold-bright: #FFD700;
+  --gold: #d4af37;
+  --gold-bright: #ffd700;
+  --gold-tint: #f5e9c8;
 
-  --primary: #D4AF37;
+  --primary: #d4af37;
   --primary-foreground: #0a0a0a;
 
   --secondary: #161616;
@@ -66,81 +69,163 @@
   --destructive: oklch(0.58 0.18 28);
   --destructive-foreground: #fff;
 
-  --border: rgba(212, 175, 55, 0.18);
-  --input: rgba(212, 175, 55, 0.22);
-  --ring: #D4AF37;
+  --border: rgb(var(--accent-rgb) / 0.18);
+  --input: rgb(var(--accent-rgb) / 0.22);
+  --ring: var(--gold);
+
+  /* Reading scale (Arabic text size multiplier) controlled from Settings. */
+  --reader-scale: 1;
 
   --font-display: "Cairo", "Amiri", "Cormorant Garamond", Georgia, serif;
   --font-arabic: "Amiri Quran", "Amiri", "Cairo", "Scheherazade New", "Noto Naskh Arabic", serif;
 }
 
-.dark { color-scheme: dark; }
+.dark {
+  color-scheme: dark;
+}
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { height: 100%; background: #0a0a0a; }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    height: 100%;
+    background: var(--background);
+  }
   body {
     color: var(--color-foreground);
-    font-family: "Cairo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background-color: #0a0a0a;
+    font-family:
+      "Cairo",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+    background-color: var(--background);
     background-image:
-      radial-gradient(1200px 700px at 0% -10%, rgba(212,175,55,0.10), transparent 60%),
-      radial-gradient(900px 600px at 100% 0%, rgba(255,215,0,0.06), transparent 55%),
-      radial-gradient(800px 600px at 50% 110%, rgba(212,175,55,0.05), transparent 60%);
+      radial-gradient(1200px 700px at 0% -10%, rgb(var(--accent-rgb) / 0.1), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgb(var(--accent-rgb) / 0.06), transparent 55%),
+      radial-gradient(800px 600px at 50% 110%, rgb(var(--accent-rgb) / 0.05), transparent 60%);
     background-attachment: fixed;
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease;
   }
-  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.005em; }
-  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { font-family: var(--font-arabic); letter-spacing: 0; }
-  .arabic { font-family: var(--font-arabic); line-height: 2.1; }
-  ::selection { background: rgba(212,175,55,0.35); color: #fff; }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.005em;
+  }
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3 {
+    font-family: var(--font-arabic);
+    letter-spacing: 0;
+  }
+  .arabic {
+    font-family: var(--font-arabic);
+    line-height: 2.1;
+  }
+  ::selection {
+    background: rgb(var(--accent-rgb) / 0.35);
+    color: #fff;
+  }
 }
 
 @utility gold-border {
-  border: 1px solid rgba(212, 175, 55, 0.28);
+  border: 1px solid rgb(var(--accent-rgb) / 0.28);
 }
 @utility gold-border-strong {
-  border: 1px solid rgba(212, 175, 55, 0.55);
+  border: 1px solid rgb(var(--accent-rgb) / 0.55);
 }
 @utility gold-gradient {
-  background-image: linear-gradient(135deg,
-    rgba(212,175,55,0.12) 0%,
-    rgba(20,20,20,0.92) 35%,
-    rgba(15,15,15,0.95) 65%,
-    rgba(255,215,0,0.10) 100%);
+  background-image: linear-gradient(
+    135deg,
+    rgb(var(--accent-rgb) / 0.14) 0%,
+    color-mix(in srgb, var(--card) 92%, transparent) 35%,
+    color-mix(in srgb, var(--card) 95%, transparent) 65%,
+    rgb(var(--accent-rgb) / 0.12) 100%
+  );
 }
 @utility gold-fill {
-  background-image: linear-gradient(135deg, #8a6b1a 0%, #D4AF37 45%, #FFD700 70%, #f5e9c8 100%);
+  background-image: linear-gradient(
+    135deg,
+    var(--gold-deep) 0%,
+    var(--gold) 45%,
+    var(--gold-bright) 70%,
+    var(--gold-tint) 100%
+  );
 }
 @utility gold-text {
-  background: linear-gradient(135deg, #8a6b1a 0%, #D4AF37 35%, #FFD700 65%, #f5e9c8 100%);
+  background: linear-gradient(
+    135deg,
+    var(--gold-deep) 0%,
+    var(--gold) 35%,
+    var(--gold-bright) 65%,
+    var(--gold-tint) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 @utility card-shadow {
   box-shadow:
-    0 1px 0 rgba(212, 175, 55, 0.25) inset,
-    0 0 0 1px rgba(0,0,0,0.4),
+    0 1px 0 rgb(var(--accent-rgb) / 0.25) inset,
+    0 0 0 1px rgba(0, 0, 0, 0.4),
     0 18px 50px -22px rgba(0, 0, 0, 0.9),
-    0 0 36px -18px rgba(212,175,55,0.35);
+    0 0 36px -18px rgb(var(--accent-rgb) / 0.35);
 }
 @utility gold-glow {
-  box-shadow: 0 0 24px rgba(212,175,55,0.45), 0 0 72px rgba(255,215,0,0.18);
+  box-shadow:
+    0 0 24px rgb(var(--accent-rgb) / 0.45),
+    0 0 72px rgb(var(--accent-rgb) / 0.18);
 }
-@utility ornament { position: relative; }
+@utility ornament {
+  position: relative;
+}
 
 @keyframes goldPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.55), 0 0 24px rgba(212,175,55,0.25); }
-  50% { box-shadow: 0 0 0 12px rgba(212,175,55,0), 0 0 36px rgba(255,215,0,0.45); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgb(var(--accent-rgb) / 0.55),
+      0 0 24px rgb(var(--accent-rgb) / 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 0 12px rgb(var(--accent-rgb) / 0),
+      0 0 36px rgb(var(--accent-rgb) / 0.45);
+  }
 }
-.animate-gold-pulse { animation: goldPulse 2.4s ease-in-out infinite; }
+.animate-gold-pulse {
+  animation: goldPulse 2.4s ease-in-out infinite;
+}
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .shimmer-gold {
-  background: linear-gradient(90deg, transparent, rgba(255,215,0,0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.35), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
+}
+
+/* Reduce-motion preference disables ambient/luxury animations. */
+.reduce-motion .animate-gold-pulse,
+.reduce-motion .shimmer-gold,
+.reduce-motion .animate-fade-in,
+.reduce-motion .animate-slide-in-right {
+  animation: none !important;
+}
+.reduce-motion * {
+  transition-duration: 0.01ms !important;
 }
