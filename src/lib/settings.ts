@@ -1,5 +1,7 @@
-// User-configurable settings: calculation method, athan muezzin, volume, notifications.
-import { useEffect, useState, useSyncExternalStore } from "react";
+// User-configurable settings: calculation method, athan muezzin, volume,
+// notifications, plus full UI customization (theme/appearance/fonts) for v3.
+import { useSyncExternalStore } from "react";
+import { DEFAULT_THEME, type AccentId, type AppearanceId, type ArabicFontId } from "./theme";
 
 export const CALC_METHODS = [
   { id: 4, ar: "أم القرى (مكة المكرمة)", en: "Umm Al-Qura, Makkah" },
@@ -17,10 +19,30 @@ export const CALC_METHODS = [
 export type MuezzinId = "makkah" | "madinah" | "aqsa" | "alafasy";
 
 export const MUEZZINS: { id: MuezzinId; ar: string; en: string; url: string }[] = [
-  { id: "makkah",  ar: "الحرم المكي",  en: "Makkah — Al-Haram",  url: "https://www.islamcan.com/audio/adhan/azan2.mp3" },
-  { id: "madinah", ar: "المسجد النبوي", en: "Madinah — Al-Nabawi", url: "https://www.islamcan.com/audio/adhan/azan1.mp3" },
-  { id: "aqsa",    ar: "المسجد الأقصى", en: "Al-Aqsa",             url: "https://www.islamcan.com/audio/adhan/azan4.mp3" },
-  { id: "alafasy", ar: "مشاري العفاسي", en: "Mishary Al-Afasy",     url: "https://www.islamcan.com/audio/adhan/azan3.mp3" },
+  {
+    id: "makkah",
+    ar: "الحرم المكي",
+    en: "Makkah — Al-Haram",
+    url: "https://www.islamcan.com/audio/adhan/azan2.mp3",
+  },
+  {
+    id: "madinah",
+    ar: "المسجد النبوي",
+    en: "Madinah — Al-Nabawi",
+    url: "https://www.islamcan.com/audio/adhan/azan1.mp3",
+  },
+  {
+    id: "aqsa",
+    ar: "المسجد الأقصى",
+    en: "Al-Aqsa",
+    url: "https://www.islamcan.com/audio/adhan/azan4.mp3",
+  },
+  {
+    id: "alafasy",
+    ar: "مشاري العفاسي",
+    en: "Mishary Al-Afasy",
+    url: "https://www.islamcan.com/audio/adhan/azan3.mp3",
+  },
 ];
 
 export type Settings = {
@@ -29,6 +51,14 @@ export type Settings = {
   volume: number; // 0..1
   notifications: boolean;
   reciter: string;
+  // UI customization (v3)
+  accent: AccentId;
+  appearance: AppearanceId;
+  arabicFont: ArabicFontId;
+  fontScale: number;
+  reduceMotion: boolean;
+  showTranslit: boolean;
+  showTranslation: boolean;
 };
 
 const KEY = "almaqam.settings";
@@ -39,6 +69,13 @@ export const DEFAULT_SETTINGS: Settings = {
   volume: 0.85,
   notifications: false,
   reciter: "ar.alafasy",
+  accent: DEFAULT_THEME.accent,
+  appearance: DEFAULT_THEME.appearance,
+  arabicFont: DEFAULT_THEME.arabicFont,
+  fontScale: DEFAULT_THEME.fontScale,
+  reduceMotion: DEFAULT_THEME.reduceMotion,
+  showTranslit: true,
+  showTranslation: true,
 };
 
 let _settings: Settings = DEFAULT_SETTINGS;
@@ -55,16 +92,25 @@ function load(): Settings {
 
 if (typeof window !== "undefined") _settings = load();
 
-export function getSettings(): Settings { return _settings; }
+export function getSettings(): Settings {
+  return _settings;
+}
 export function setSettings(patch: Partial<Settings>) {
   _settings = { ..._settings, ...patch };
   if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(_settings));
   listeners.forEach((l) => l());
 }
 
-function subscribe(cb: () => void) { listeners.add(cb); return () => listeners.delete(cb); }
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
 
 export function useSettings(): [Settings, (p: Partial<Settings>) => void] {
-  const s = useSyncExternalStore(subscribe, () => _settings, () => DEFAULT_SETTINGS);
+  const s = useSyncExternalStore(
+    subscribe,
+    () => _settings,
+    () => DEFAULT_SETTINGS,
+  );
   return [s, setSettings];
 }

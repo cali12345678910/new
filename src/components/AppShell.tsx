@@ -1,10 +1,21 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
-import { Home, BookOpen, Clock, Compass, Sparkles, CircleDot, Languages, Settings as SettingsIcon } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  Clock,
+  Compass,
+  Sparkles,
+  CircleDot,
+  Languages,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { SettingsDrawer } from "./SettingsDrawer";
+import { useSettings } from "@/lib/settings";
+import { applyTheme } from "@/lib/theme";
 
 const NAV = [
   { to: "/", icon: Home, key: "nav_home" as const },
@@ -19,6 +30,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings] = useSettings();
+
+  useEffect(() => {
+    applyTheme({
+      accent: settings.accent,
+      appearance: settings.appearance,
+      arabicFont: settings.arabicFont,
+      fontScale: settings.fontScale,
+      reduceMotion: settings.reduceMotion,
+    });
+  }, [
+    settings.accent,
+    settings.appearance,
+    settings.arabicFont,
+    settings.fontScale,
+    settings.reduceMotion,
+  ]);
 
   return (
     <div className="min-h-dvh flex flex-col">

@@ -7,7 +7,10 @@ type Dict = Record<string, { ar: string; en: string }>;
 export const t_dict: Dict = {
   app_name: { ar: "الْمَقَام", en: "Al-Maqam" },
   app_name_full: { ar: "الْمَقَام", en: "Al-Maqam" },
-  app_tag: { ar: "منصّتك الإسلامية الفاخرة للصلاة والقرآن والذكر", en: "Your premium Islamic platform for prayer, Qur'an & dhikr" },
+  app_tag: {
+    ar: "منصّتك الإسلامية الفاخرة للصلاة والقرآن والذكر",
+    en: "Your premium Islamic platform for prayer, Qur'an & dhikr",
+  },
   nav_home: { ar: "الرئيسية", en: "Home" },
   nav_prayer: { ar: "الصلاة", en: "Prayer Times" },
   nav_quran: { ar: "القرآن", en: "Qur'an" },
@@ -62,12 +65,31 @@ export const t_dict: Dict = {
   hijri: { ar: "هجري", en: "Hijri" },
   gregorian: { ar: "ميلادي", en: "Gregorian" },
   language: { ar: "اللغة", en: "Language" },
-  privacy_note: { ar: "بدون إعلانات • منصّة فاخرة • تحترم خصوصيتك", en: "Ad-free • Premium platform • Respects your privacy" },
+  privacy_note: {
+    ar: "بدون إعلانات • منصّة فاخرة • تحترم خصوصيتك",
+    en: "Ad-free • Premium platform • Respects your privacy",
+  },
   completed: { ar: "اكتمل", en: "Completed" },
   tap_to_count: { ar: "اضغط للعد", en: "Tap to count" },
+  appearance: { ar: "المظهر", en: "Appearance" },
+  accent_color: { ar: "اللون المميّز", en: "Accent color" },
+  theme_mode: { ar: "النمط", en: "Theme" },
+  arabic_font: { ar: "الخط العربي", en: "Arabic font" },
+  font_size: { ar: "حجم الخط", en: "Font size" },
+  reduce_motion: { ar: "تقليل الحركة", en: "Reduce motion" },
+  show_translit: { ar: "إظهار النطق", en: "Show transliteration" },
+  show_translation: { ar: "إظهار الترجمة", en: "Show translation" },
+  preview: { ar: "معاينة", en: "Preview" },
+  reading: { ar: "القراءة", en: "Reading" },
+  favorites: { ar: "المفضّلة", en: "Favorites" },
 };
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof t_dict) => string; dir: "rtl" | "ltr" };
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (k: keyof typeof t_dict) => string;
+  dir: "rtl" | "ltr";
+};
 const I18nCtx = createContext<Ctx | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -82,7 +104,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     if (typeof document === "undefined") return;
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-    document.documentElement.classList.add("dark");
+    // The light/dark class is owned by the theme engine (see lib/theme.ts).
   }, [lang]);
 
   const setLang = (l: Lang) => {
@@ -91,7 +113,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (k: keyof typeof t_dict) => t_dict[k]?.[lang] ?? String(k);
-  return <I18nCtx.Provider value={{ lang, setLang, t, dir: lang === "ar" ? "rtl" : "ltr" }}>{children}</I18nCtx.Provider>;
+  return (
+    <I18nCtx.Provider value={{ lang, setLang, t, dir: lang === "ar" ? "rtl" : "ltr" }}>
+      {children}
+    </I18nCtx.Provider>
+  );
 }
 
 export function useI18n() {
