@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Sun,
@@ -31,6 +31,8 @@ import { AYAH_OF_DAY, DHIKR } from "@/lib/dhikr-data";
 import { requestNotificationPermission, scheduleAthan, playAthan, stopAthan } from "@/lib/athan";
 import { useSettings } from "@/lib/settings";
 import { RadialCountdown } from "@/components/RadialCountdown";
+import { ShareButton } from "@/components/ShareCard";
+import { getSection, type SectionId } from "@/lib/sections";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -97,11 +99,8 @@ function Dashboard() {
   const todayDhikr = morning.items[7] ?? morning.items[0];
   const arScale = settings.fontScale;
 
-  return (
-    <div className="space-y-4">
-      <LocationBar loc={loc} onChange={setLoc} />
-
-      {/* Hero with radial countdown */}
+  const sectionNodes: Record<SectionId, ReactNode> = {
+    prayer: (
       <section className="rounded-3xl gold-border gold-gradient card-shadow p-5 sm:p-7 overflow-hidden relative">
         <Ornament />
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center relative">
@@ -168,8 +167,8 @@ function Dashboard() {
           </div>
         </div>
       </section>
-
-      {/* Prayer cards */}
+    ),
+    times: (
       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {isLoading &&
           Array.from({ length: 6 }).map((_, i) => (
@@ -218,64 +217,122 @@ function Dashboard() {
           </div>
         )}
       </section>
-
-      {/* Qibla + Dhikr + Ayah */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Link
-          to="/qibla"
-          className="rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {t("qibla_dir")}
-            </div>
-            <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+    ),
+    qibla: (
+      <Link
+        to="/qibla"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("qibla_dir")}
           </div>
-          <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
-          <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
-          <CompassMini bearing={bearing} />
-        </Link>
-
-        <Link
-          to="/dhikr"
-          className="rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {t("today_dhikr")}
-            </div>
+          <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+        </div>
+        <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
+        <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
+        <CompassMini bearing={bearing} />
+      </Link>
+    ),
+    dhikr: (
+      <Link
+        to="/dhikr"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("today_dhikr")}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareButton
+              content={{
+                kind: "dhikr",
+                ar: todayDhikr.ar,
+                translit: todayDhikr.translit,
+                en: todayDhikr.en,
+                source: todayDhikr.source,
+              }}
+            />
             <Sparkles className="size-4 text-primary" />
           </div>
-          <p
-            className="mt-3 arabic leading-relaxed line-clamp-4"
-            style={{ fontSize: `${1.25 * arScale}rem` }}
-          >
-            {todayDhikr.ar}
-          </p>
-          {lang === "en" && todayDhikr.en && (
-            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
-          )}
-        </Link>
-
-        <Link
-          to="/quran"
-          className="rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
+        </div>
+        <p
+          className="mt-3 arabic leading-relaxed line-clamp-4"
+          style={{ fontSize: `${1.25 * arScale}rem` }}
         >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
-            </div>
+          {todayDhikr.ar}
+        </p>
+        {lang === "en" && todayDhikr.en && (
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
+        )}
+      </Link>
+    ),
+    quran: (
+      <Link
+        to="/quran"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareButton
+              content={{
+                kind: "ayah",
+                ar: AYAH_OF_DAY.ar,
+                en: AYAH_OF_DAY.en,
+                source: AYAH_OF_DAY.ref,
+              }}
+            />
             <BookOpen className="size-4 text-primary" />
           </div>
-          <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
-            {AYAH_OF_DAY.ar}
-          </p>
-          {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
-          <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
-        </Link>
-      </section>
+        </div>
+        <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
+          {AYAH_OF_DAY.ar}
+        </p>
+        {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
+        <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
+      </Link>
+    ),
+  };
+
+  return (
+    <div className="space-y-4">
+      <LocationBar loc={loc} onChange={setLoc} />
+      {renderOrderedSections(settings.sectionOrder, sectionNodes)}
     </div>
   );
+}
+
+// Renders dashboard sections in the user's saved order, grouping consecutive
+// "card" sections into a responsive 3-up grid (so the default order reproduces
+// the original layout exactly).
+function renderOrderedSections(order: SectionId[], nodes: Record<SectionId, ReactNode>) {
+  const out: ReactNode[] = [];
+  let cards: ReactNode[] = [];
+  const flush = () => {
+    if (cards.length) {
+      out.push(
+        <section key={`cards-${out.length}`} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {cards}
+        </section>,
+      );
+      cards = [];
+    }
+  };
+  for (const id of order) {
+    const node = nodes[id];
+    if (!node) continue;
+    if (getSection(id).kind === "card") {
+      cards.push(<Fragment key={id}>{node}</Fragment>);
+    } else {
+      flush();
+      out.push(<Fragment key={id}>{node}</Fragment>);
+    }
+  }
+  flush();
+  return out;
 }
 
 type NextPrayer = NonNullable<ReturnType<typeof nextPrayer>>;

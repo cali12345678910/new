@@ -82,6 +82,19 @@ export const t_dict: Dict = {
   preview: { ar: "معاينة", en: "Preview" },
   reading: { ar: "القراءة", en: "Reading" },
   favorites: { ar: "المفضّلة", en: "Favorites" },
+  search_all: { ar: "ابحث في القرآن والأذكار…", en: "Search Qur'an & dhikr…" },
+  no_results: { ar: "لا توجد نتائج", en: "No results" },
+  search_hint: {
+    ar: "اكتب حرفين على الأقل للبحث الفوري",
+    en: "Type at least 2 characters for instant search",
+  },
+  custom_color: { ar: "لون مخصّص", en: "Custom color" },
+  layout_order: { ar: "ترتيب الأقسام", en: "Section order" },
+  move_up: { ar: "تحريك لأعلى", en: "Move up" },
+  move_down: { ar: "تحريك لأسفل", en: "Move down" },
+  reset_order: { ar: "إعادة الترتيب الافتراضي", en: "Reset order" },
+  share_image: { ar: "مشاركة كصورة", en: "Share as image" },
+  clear: { ar: "مسح", en: "Clear" },
 };
 
 type Ctx = {

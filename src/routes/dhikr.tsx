@@ -27,6 +27,7 @@ import {
 import { DHIKR, type DhikrItem } from "@/lib/dhikr-data";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
+import { ShareButton } from "@/components/ShareCard";
 
 export const Route = createFileRoute("/dhikr")({
   head: () => ({
@@ -376,13 +377,24 @@ function DhikrCard({
                   <BookMarked className="size-3" /> {item.source}
                 </span>
               )}
-              <button
-                onClick={reset}
-                className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] gold-border bg-secondary/60 hover:bg-accent"
-                aria-label="reset"
-              >
-                <RotateCcw className="size-3" /> {lang === "ar" ? "إعادة" : "Reset"}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={reset}
+                  className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] gold-border bg-secondary/60 hover:bg-accent"
+                  aria-label="reset"
+                >
+                  <RotateCcw className="size-3" /> {lang === "ar" ? "إعادة" : "Reset"}
+                </button>
+                <ShareButton
+                  content={{
+                    kind: "dhikr",
+                    ar: item.ar,
+                    translit: item.translit,
+                    en: item.en,
+                    source: item.source,
+                  }}
+                />
+              </div>
             </div>
 
             <button

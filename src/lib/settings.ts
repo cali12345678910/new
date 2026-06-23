@@ -2,6 +2,7 @@
 // notifications, plus full UI customization (theme/appearance/fonts) for v3.
 import { useSyncExternalStore } from "react";
 import { DEFAULT_THEME, type AccentId, type AppearanceId, type ArabicFontId } from "./theme";
+import { DEFAULT_SECTION_ORDER, normalizeOrder, type SectionId } from "./sections";
 
 export const CALC_METHODS = [
   { id: 4, ar: "أم القرى (مكة المكرمة)", en: "Umm Al-Qura, Makkah" },
@@ -59,6 +60,9 @@ export type Settings = {
   reduceMotion: boolean;
   showTranslit: boolean;
   showTranslation: boolean;
+  // v4: optional custom accent hex (overrides `accent`) + dashboard section order
+  customAccent: string | null;
+  sectionOrder: SectionId[];
 };
 
 const KEY = "almaqam.settings";
@@ -76,6 +80,8 @@ export const DEFAULT_SETTINGS: Settings = {
   reduceMotion: DEFAULT_THEME.reduceMotion,
   showTranslit: true,
   showTranslation: true,
+  customAccent: null,
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 let _settings: Settings = DEFAULT_SETTINGS;
@@ -85,7 +91,11 @@ function load(): Settings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    if (raw) {
+      const merged = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      merged.sectionOrder = normalizeOrder(merged.sectionOrder);
+      return merged;
+    }
   } catch {
     /* ignore */
   }
