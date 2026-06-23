@@ -1,17 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Search, ChevronRight, BookOpen, Bookmark } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { SURAHS, type SurahMeta } from "@/lib/quran-meta";
 
-type Surah = {
-  number: number;
-  name: string;
-  englishName: string;
-  englishNameTranslation: string;
-  numberOfAyahs: number;
-  revelationType: string;
-};
+type Surah = SurahMeta;
 
 export const Route = createFileRoute("/quran/")({
   head: () => ({
@@ -43,21 +36,12 @@ function QuranIndex() {
     }
   }, []);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["surahs"],
-    queryFn: async (): Promise<Surah[]> => {
-      const r = await fetch("https://api.alquran.cloud/v1/surah");
-      if (!r.ok) throw new Error(`Failed to load surah list (${r.status})`);
-      const j = await r.json();
-      if (!Array.isArray(j?.data)) throw new Error("Malformed surah list response");
-      return j.data;
-    },
-    staleTime: Infinity,
-  });
+  // Surah list is bundled locally (src/lib/quran-meta.ts) — no runtime text feed.
+  const data: Surah[] = SURAHS;
+  const isLoading = false;
 
   const filtered = useMemo(() => {
-    if (!data) return [];
-    let list = data;
+    let list: Surah[] = data;
     if (tab === "bookmarks") list = data.filter((s) => bookmarks.includes(s.number));
     const term = q.trim().toLowerCase();
     if (!term) return list;

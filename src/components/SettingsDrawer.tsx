@@ -1,10 +1,32 @@
 import { useState } from "react";
-import { X, Bell, Volume2, Play, Square, Palette, Type, Check } from "lucide-react";
+import {
+  X,
+  Bell,
+  Volume2,
+  Play,
+  Square,
+  Palette,
+  Type,
+  Check,
+  ChevronUp,
+  ChevronDown,
+  RotateCcw,
+  LayoutList,
+  Pipette,
+} from "lucide-react";
 import { CALC_METHODS, MUEZZINS, useSettings } from "@/lib/settings";
 import { useI18n } from "@/lib/i18n";
 import { playAthan, stopAthan, requestNotificationPermission } from "@/lib/athan";
 import { RECITERS } from "@/lib/dhikr-data";
-import { ACCENTS, APPEARANCES, ARABIC_FONTS, FONT_SCALES } from "@/lib/theme";
+import {
+  ACCENTS,
+  APPEARANCES,
+  ARABIC_FONTS,
+  FONT_SCALES,
+  getAccent,
+  resolveAccent,
+} from "@/lib/theme";
+import { DEFAULT_SECTION_ORDER, getSection, moveSection } from "@/lib/sections";
 
 export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang } = useI18n();
@@ -65,29 +87,63 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
           {/* Accent color swatches */}
           <div className="mb-1 text-xs text-muted-foreground">{t("accent_color")}</div>
           <div className="grid grid-cols-8 gap-2">
-            {ACCENTS.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => setS({ accent: a.id })}
-                title={lang === "ar" ? a.ar : a.en}
-                aria-label={lang === "ar" ? a.ar : a.en}
-                className={`grid aspect-square place-items-center rounded-full transition ${
-                  s.accent === a.id ? "ring-2 ring-offset-2 ring-offset-card" : "hover:scale-105"
-                }`}
-                style={{
-                  background: `linear-gradient(135deg, ${a.deep}, ${a.base} 55%, ${a.bright})`,
-                  // @ts-expect-error CSS var for ring color
-                  "--tw-ring-color": a.base,
-                }}
+            {ACCENTS.map((a) => {
+              const selected = s.accent === a.id && !s.customAccent;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setS({ accent: a.id, customAccent: null })}
+                  title={lang === "ar" ? a.ar : a.en}
+                  aria-label={lang === "ar" ? a.ar : a.en}
+                  className={`grid aspect-square place-items-center rounded-full transition ${
+                    selected ? "ring-2 ring-offset-2 ring-offset-card" : "hover:scale-105"
+                  }`}
+                  style={{
+                    background: `linear-gradient(135deg, ${a.deep}, ${a.base} 55%, ${a.bright})`,
+                    // @ts-expect-error CSS var for ring color
+                    "--tw-ring-color": a.base,
+                  }}
+                >
+                  {selected && <Check className="size-3.5 text-black/80" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom accent color picker */}
+          <div className="mt-3 flex items-center justify-between rounded-xl gold-border bg-secondary/60 px-3 py-2.5">
+            <span className="inline-flex items-center gap-2 text-sm">
+              <Pipette className="size-4 text-primary" /> {t("custom_color")}
+            </span>
+            <div className="flex items-center gap-2">
+              {s.customAccent && (
+                <button
+                  onClick={() => setS({ customAccent: null })}
+                  className="rounded-full gold-border px-2 py-1 text-[11px] hover:bg-accent"
+                >
+                  {t("reset")}
+                </button>
+              )}
+              <label
+                className="relative size-8 cursor-pointer overflow-hidden rounded-full gold-border-strong"
+                style={{ background: resolveAccent(s).base }}
+                aria-label={t("custom_color")}
               >
-                {s.accent === a.id && <Check className="size-3.5 text-black/80" />}
-              </button>
-            ))}
+                <input
+                  type="color"
+                  value={s.customAccent ?? getAccent(s.accent).base}
+                  onChange={(e) => setS({ customAccent: e.target.value })}
+                  className="absolute inset-0 size-full cursor-pointer opacity-0"
+                />
+              </label>
+            </div>
           </div>
 
           {/* Theme mode */}
-          <div className="mt-4 mb-1 text-xs text-muted-foreground">{t("theme_mode")}</div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="mt-4 mb-1 text-xs text-muted-foreground">
+            {t("theme_mode")} <span className="text-primary/70">({APPEARANCES.length})</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pe-1">
             {APPEARANCES.map((ap) => (
               <button
                 key={ap.id}
@@ -95,7 +151,7 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
                 className={`rounded-xl px-2 py-2 text-xs transition border ${
                   s.appearance === ap.id
                     ? "gold-border-strong text-foreground"
-                    : "border-transparent hover:bg-accent"
+                    : "border-transparent hover:opacity-90"
                 }`}
                 style={{ background: ap.vars.card, color: ap.vars.foreground }}
               >
@@ -103,6 +159,55 @@ export function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () =
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Layout — dashboard section order */}
+        <section className="mt-6">
+          <h3 className="text-sm font-semibold mb-2 text-foreground/90 inline-flex items-center gap-2">
+            <LayoutList className="size-4 text-primary" /> {t("layout_order")}
+          </h3>
+          <div className="grid gap-1.5">
+            {s.sectionOrder.map((id, i) => {
+              const meta = getSection(id);
+              return (
+                <div
+                  key={id}
+                  className="flex items-center justify-between rounded-xl gold-border bg-secondary/60 px-3 py-2"
+                >
+                  <span className="inline-flex items-center gap-2 text-sm">
+                    <span className="grid size-5 place-items-center rounded-full gold-border text-[10px] text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    {lang === "ar" ? meta.ar : meta.en}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <button
+                      onClick={() => setS({ sectionOrder: moveSection(s.sectionOrder, id, -1) })}
+                      disabled={i === 0}
+                      aria-label={t("move_up")}
+                      className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+                    >
+                      <ChevronUp className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setS({ sectionOrder: moveSection(s.sectionOrder, id, 1) })}
+                      disabled={i === s.sectionOrder.length - 1}
+                      aria-label={t("move_down")}
+                      className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+                    >
+                      <ChevronDown className="size-4" />
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={() => setS({ sectionOrder: [...DEFAULT_SECTION_ORDER] })}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full gold-border bg-secondary/60 px-3 py-1.5 text-xs hover:bg-accent"
+          >
+            <RotateCcw className="size-3" /> {t("reset_order")}
+          </button>
         </section>
 
         {/* Reading: fonts, size, translation toggles */}

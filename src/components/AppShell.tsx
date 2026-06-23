@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { SettingsDrawer } from "./SettingsDrawer";
+import { GlobalSearch } from "./GlobalSearch";
 import { useSettings } from "@/lib/settings";
 import { applyTheme } from "@/lib/theme";
 
@@ -35,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyTheme({
       accent: settings.accent,
+      customAccent: settings.customAccent,
       appearance: settings.appearance,
       arabicFont: settings.arabicFont,
       fontScale: settings.fontScale,
@@ -42,6 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   }, [
     settings.accent,
+    settings.customAccent,
     settings.appearance,
     settings.arabicFont,
     settings.fontScale,
@@ -97,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-5 pb-24 md:pb-8">{children}</main>
+      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-5 pb-40 md:pb-24">{children}</main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/70 bg-background/95 backdrop-blur">
         <div className="grid grid-cols-6">
@@ -124,6 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {t("privacy_note")}
       </footer>
 
+      <GlobalSearch />
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
