@@ -588,18 +588,33 @@ export const AYAH_OF_DAY = {
   ref: "Surah At-Talāq 65:2–3",
 };
 
+// `server`/`mp3` map to the per-reciter mushaf folders on mp3quran.net; each
+// reciter lives on a specific server host (verified to return the surah audio).
 export const RECITERS = [
-  { id: "ar.alafasy", ar: "مشاري العفاسي", en: "Mishary Al-Afasy", mp3: "afs" },
+  { id: "ar.alafasy", ar: "مشاري العفاسي", en: "Mishary Al-Afasy", server: 8, mp3: "afs" },
   {
     id: "ar.abdulbasit",
     ar: "عبد الباسط عبد الصمد",
     en: "Abdul Basit Abdul Samad",
-    mp3: "abdul_basit",
+    server: 7,
+    mp3: "basit",
   },
-  { id: "ar.shaatree", ar: "أبو بكر الشاطري", en: "Abu Bakr Al-Shatri", mp3: "shatri" },
-  { id: "ar.minshawi", ar: "محمد صديق المنشاوي", en: "Mohamed Siddiq Al-Minshawi", mp3: "minsh" },
-  { id: "ar.husary", ar: "محمود خليل الحصري", en: "Mahmoud Khalil Al-Husary", mp3: "husr" },
-  { id: "ar.maher", ar: "ماهر المعيقلي", en: "Maher Al-Muaiqly", mp3: "mahr192" },
+  { id: "ar.shaatree", ar: "أبو بكر الشاطري", en: "Abu Bakr Al-Shatri", server: 11, mp3: "shatri" },
+  {
+    id: "ar.minshawi",
+    ar: "محمد صديق المنشاوي",
+    en: "Mohamed Siddiq Al-Minshawi",
+    server: 10,
+    mp3: "minsh",
+  },
+  {
+    id: "ar.husary",
+    ar: "محمود خليل الحصري",
+    en: "Mahmoud Khalil Al-Husary",
+    server: 13,
+    mp3: "husr",
+  },
+  { id: "ar.maher", ar: "ماهر المعيقلي", en: "Maher Al-Muaiqly", server: 12, mp3: "maher" },
 ] as const;
 
 export type ReciterId = (typeof RECITERS)[number]["id"];

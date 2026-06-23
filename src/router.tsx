@@ -9,6 +9,9 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    defaultPreload: "intent",
+    // Let React Query own data freshness so intent-preloaded routes don't
+    // immediately refetch on navigation.
     defaultPreloadStaleTime: 0,
   });
 

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Sun,
@@ -59,13 +59,8 @@ function Dashboard() {
   const { t, lang } = useI18n();
   const [settings] = useSettings();
   const [loc, setLoc] = useState<Loc>(() => loadLocation());
-  const [now, setNow] = useState(() => new Date());
+  const [tick, setTick] = useState(0);
   const [athanOn, setAthanOn] = useState(false);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["today", loc.lat, loc.lng, settings.calcMethod],
@@ -73,9 +68,12 @@ function Dashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data, now]);
+  // Recompute only when the prayer data changes or the active countdown rolls
+  // over to the next prayer (signalled by LiveCountdown), not every second.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `tick` is the rollover trigger
+  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data, tick]);
   const bearing = useMemo(() => qiblaBearing(loc.lat, loc.lng), [loc]);
-  const progress = next ? 1 - next.msLeft / next.intervalMs : 0;
+  const onCountdownComplete = useCallback(() => setTick((n) => n + 1), []);
 
   useEffect(() => {
     if (athanOn && data) scheduleAthan(data.timings, lang);
@@ -113,7 +111,7 @@ function Dashboard() {
             </div>
             <div className="mt-2 flex items-baseline gap-3 flex-wrap">
               <div className="font-display text-5xl sm:text-6xl gold-text leading-none">
-                {next ? t(next.key.toLowerCase() as any) : "—"}
+                {next ? t(next.key.toLowerCase() as Parameters<typeof t>[0]) : "—"}
               </div>
               {data && next && (
                 <div className="text-base text-muted-foreground tabular-nums">
@@ -152,19 +150,21 @@ function Dashboard() {
           </div>
 
           <div className="order-1 md:order-2 grid place-items-center">
-            <RadialCountdown size={240} stroke={12} progress={progress}>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  {t("in_time")}
+            {next ? (
+              <LiveCountdown next={next} onComplete={onCountdownComplete} />
+            ) : (
+              <RadialCountdown size={240} stroke={12} progress={0}>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                    {t("in_time")}
+                  </div>
+                  <div className="font-mono tabular-nums text-3xl gold-text font-bold mt-1">
+                    --:--:--
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1" />
                 </div>
-                <div className="font-mono tabular-nums text-3xl gold-text font-bold mt-1">
-                  {next ? formatHMS(next.msLeft) : "--:--:--"}
-                </div>
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  {next ? t(next.key.toLowerCase() as any) : ""}
-                </div>
-              </div>
-            </RadialCountdown>
+              </RadialCountdown>
+            )}
           </div>
         </div>
       </section>
@@ -195,7 +195,7 @@ function Dashboard() {
                   )}
                 </div>
                 <div className="mt-2 font-display text-lg leading-tight">
-                  {t(k.toLowerCase() as any)}
+                  {t(k.toLowerCase() as Parameters<typeof t>[0])}
                 </div>
                 <div
                   className={`text-sm font-mono tabular-nums ${isNext ? "" : "text-muted-foreground"}`}
@@ -275,6 +275,43 @@ function Dashboard() {
         </Link>
       </section>
     </div>
+  );
+}
+
+type NextPrayer = NonNullable<ReturnType<typeof nextPrayer>>;
+
+// Owns the 1s ticker so only the ring/timer re-renders each second instead of
+// the whole dashboard. Calls onComplete when the active prayer time arrives.
+function LiveCountdown({ next, onComplete }: { next: NextPrayer; onComplete: () => void }) {
+  const { t } = useI18n();
+  const [msLeft, setMsLeft] = useState(() => next.at.getTime() - Date.now());
+
+  useEffect(() => {
+    setMsLeft(next.at.getTime() - Date.now());
+    const id = setInterval(() => {
+      const left = next.at.getTime() - Date.now();
+      setMsLeft(left);
+      if (left <= 0) onComplete();
+    }, 1000);
+    return () => clearInterval(id);
+  }, [next, onComplete]);
+
+  const progress = 1 - msLeft / next.intervalMs;
+
+  return (
+    <RadialCountdown size={240} stroke={12} progress={progress}>
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          {t("in_time")}
+        </div>
+        <div className="font-mono tabular-nums text-3xl gold-text font-bold mt-1">
+          {formatHMS(msLeft)}
+        </div>
+        <div className="text-[11px] text-muted-foreground mt-1">
+          {t(next.key.toLowerCase() as Parameters<typeof t>[0])}
+        </div>
+      </div>
+    </RadialCountdown>
   );
 }
 

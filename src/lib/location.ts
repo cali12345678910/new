@@ -40,7 +40,9 @@ export async function detectLocation(): Promise<Loc> {
 
 export async function searchPlace(q: string): Promise<Loc[]> {
   const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encodeURIComponent(q)}`);
+  if (!r.ok) throw new Error(`Place search failed (${r.status})`);
   const arr = (await r.json()) as Array<{ lat: string; lon: string; display_name: string }>;
+  if (!Array.isArray(arr)) return [];
   return arr.map((x) => ({ lat: parseFloat(x.lat), lng: parseFloat(x.lon), label: x.display_name }));
 }
 

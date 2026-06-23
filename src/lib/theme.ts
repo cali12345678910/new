@@ -284,6 +284,28 @@ export function getAppearance(id: AppearanceId): Appearance {
   return APPEARANCES.find((a) => a.id === id) ?? APPEARANCES[0];
 }
 
+/**
+ * Builds a tiny synchronous script (run in <head> before first paint) that
+ * applies the saved theme/lang from localStorage. This prevents a flash of the
+ * default obsidian/gold theme when the user has saved a different appearance.
+ * It mirrors applyTheme + I18nProvider's dir/lang side-effects, reusing the same
+ * lookup tables so there is a single source of truth.
+ */
+export function buildThemeInitScript(): string {
+  const accents = Object.fromEntries(
+    ACCENTS.map((a) => [
+      a.id,
+      { rgb: a.rgb, deep: a.deep, base: a.base, bright: a.bright, tint: a.tint },
+    ]),
+  );
+  const appearances = Object.fromEntries(
+    APPEARANCES.map((a) => [a.id, { dark: a.dark, vars: a.vars }]),
+  );
+  const fonts = Object.fromEntries(ARABIC_FONTS.map((f) => [f.id, f.stack]));
+  const data = JSON.stringify({ accents, appearances, fonts, def: DEFAULT_THEME });
+  return `(function(){try{var D=${data};var r=document.documentElement;var s={};try{s=JSON.parse(localStorage.getItem("almaqam.settings")||"{}")||{}}catch(e){}var t=Object.assign({},D.def,s);var ac=D.accents[t.accent]||D.accents[D.def.accent];var ap=D.appearances[t.appearance]||D.appearances[D.def.appearance];var fn=D.fonts[t.arabicFont]||D.fonts[D.def.arabicFont];var set=function(k,v){r.style.setProperty(k,v)};set("--accent-rgb",ac.rgb);set("--gold-deep",ac.deep);set("--gold",ac.base);set("--gold-bright",ac.bright);set("--gold-tint",ap.dark?ac.tint:ac.deep);set("--primary",ac.base);set("--primary-foreground","#0a0a0a");set("--ring",ac.base);var v=ap.vars;set("--background",v.background);set("--foreground",v.foreground);set("--card",v.card);set("--card-foreground",v.cardForeground);set("--popover",v.popover);set("--popover-foreground",v.popoverForeground);set("--secondary",v.secondary);set("--secondary-foreground",v.secondaryForeground);set("--muted",v.muted);set("--muted-foreground",v.mutedForeground);set("--accent",v.accent);set("--accent-foreground",v.accentForeground);set("--font-arabic",fn);set("--reader-scale",String(t.fontScale));r.classList.toggle("dark",!!ap.dark);r.classList.toggle("reduce-motion",!!t.reduceMotion);r.style.colorScheme=ap.dark?"dark":"light";var lang=null;try{lang=localStorage.getItem("lang")}catch(e){}if(lang==="ar"||lang==="en"){r.lang=lang;r.dir=lang==="ar"?"rtl":"ltr"}}catch(e){}})();`;
+}
+
 export function applyTheme(t: ThemeSettings) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;

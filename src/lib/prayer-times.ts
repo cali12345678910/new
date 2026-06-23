@@ -15,13 +15,17 @@ const BASE = "https://api.aladhan.com/v1";
 
 export async function fetchToday(lat: number, lng: number, method = 4): Promise<DayData> {
   const r = await fetch(`${BASE}/timings?latitude=${lat}&longitude=${lng}&method=${method}`);
+  if (!r.ok) throw new Error(`Prayer times request failed (${r.status})`);
   const j = await r.json();
+  if (!j?.data) throw new Error("Malformed prayer times response");
   return j.data as DayData;
 }
 
 export async function fetchMonth(lat: number, lng: number, year: number, month: number, calcMethod = 4): Promise<DayData[]> {
   const r = await fetch(`${BASE}/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}&method=${calcMethod}`);
+  if (!r.ok) throw new Error(`Prayer calendar request failed (${r.status})`);
   const j = await r.json();
+  if (!Array.isArray(j?.data)) throw new Error("Malformed prayer calendar response");
   return j.data as DayData[];
 }
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Compass as CompassIcon, AlertTriangle } from "lucide-react";
 
 import { LocationBar } from "@/components/LocationBar";
@@ -25,12 +25,14 @@ function QiblaPage() {
 
   const bearing = qiblaBearing(loc.lat, loc.lng);
 
+  const onOrientRef = useRef((e: DeviceOrientationEvent) => {
+    const compassHeading =
+      (e as any).webkitCompassHeading ?? (e.alpha !== null ? 360 - e.alpha : null);
+    if (typeof compassHeading === "number") setHeading(compassHeading);
+  });
+
   useEffect(() => {
-    function onOrient(e: DeviceOrientationEvent) {
-      const compassHeading =
-        (e as any).webkitCompassHeading ?? (e.alpha !== null ? 360 - e.alpha : null);
-      if (typeof compassHeading === "number") setHeading(compassHeading);
-    }
+    const onOrient = onOrientRef.current;
     if (typeof window !== "undefined" && "DeviceOrientationEvent" in window) {
       setSupported(true);
       const anyEvent = (window as any).DeviceOrientationEvent;
@@ -53,10 +55,7 @@ function QiblaPage() {
       const res = await anyEvent.requestPermission();
       if (res === "granted") {
         setNeedsPermission(false);
-        window.addEventListener("deviceorientation", (e) => {
-          const ch = (e as any).webkitCompassHeading ?? (e.alpha !== null ? 360 - e.alpha : null);
-          if (typeof ch === "number") setHeading(ch);
-        }, true);
+        window.addEventListener("deviceorientation", onOrientRef.current, true);
       }
     } catch {}
   }

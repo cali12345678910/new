@@ -32,10 +32,12 @@ function SurahPage() {
   const [bookmarked, setBookmarked] = useState(false);
 
   const { data: arabic, isLoading } = useQuery({
-    queryKey: ["surah-ar", id, settings.reciter],
+    queryKey: ["surah-ar", id],
     queryFn: async (): Promise<SurahDetail> => {
-      const r = await fetch(`https://api.alquran.cloud/v1/surah/${id}/${settings.reciter}`);
+      const r = await fetch(`https://api.alquran.cloud/v1/surah/${id}/quran-uthmani`);
+      if (!r.ok) throw new Error(`Failed to load surah ${id}`);
       const j = await r.json();
+      if (!j?.data) throw new Error(`Malformed surah response for ${id}`);
       return j.data;
     },
     staleTime: Infinity,
@@ -45,25 +47,28 @@ function SurahPage() {
     queryKey: ["surah-en", id],
     queryFn: async (): Promise<SurahDetail> => {
       const r = await fetch(`https://api.alquran.cloud/v1/surah/${id}/en.sahih`);
+      if (!r.ok) throw new Error(`Failed to load translation for surah ${id}`);
       const j = await r.json();
+      if (!j?.data) throw new Error(`Malformed translation response for ${id}`);
       return j.data;
     },
     staleTime: Infinity,
   });
 
   const reciter = RECITERS.find((r) => r.id === settings.reciter) ?? RECITERS[0];
-  const fullAudio = `https://server8.mp3quran.net/${reciter.mp3}/${String(id).padStart(3, "0")}.mp3`;
+  const fullAudio = `https://server${reciter.server}.mp3quran.net/${reciter.mp3}/${String(id).padStart(3, "0")}.mp3`;
 
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
+    setPlaying(!a.paused);
     const on = () => setPlaying(true);
     const off = () => setPlaying(false);
     a.addEventListener("play", on);
     a.addEventListener("pause", off);
     a.addEventListener("ended", off);
     return () => { a.removeEventListener("play", on); a.removeEventListener("pause", off); a.removeEventListener("ended", off); };
-  }, []);
+  }, [fullAudio]);
 
   // Save reading progress + bookmark state
   useEffect(() => {
@@ -126,7 +131,12 @@ function SurahPage() {
               <SkipBack className="size-4 rtl:rotate-180" />
             </Link>
             <button
-              onClick={() => { const a = audioRef.current!; playing ? a.pause() : a.play(); }}
+              onClick={() => {
+                const a = audioRef.current;
+                if (!a) return;
+                if (playing) a.pause();
+                else a.play().catch(() => {});
+              }}
               className="grid place-items-center size-14 rounded-full gold-fill text-black hover:scale-105 transition shadow-lg"
               aria-label={playing ? "pause" : "play"}
             >

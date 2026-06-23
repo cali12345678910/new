@@ -32,7 +32,9 @@ function QuranIndex() {
     queryKey: ["surahs"],
     queryFn: async (): Promise<Surah[]> => {
       const r = await fetch("https://api.alquran.cloud/v1/surah");
+      if (!r.ok) throw new Error(`Failed to load surah list (${r.status})`);
       const j = await r.json();
+      if (!Array.isArray(j?.data)) throw new Error("Malformed surah list response");
       return j.data;
     },
     staleTime: Infinity,
