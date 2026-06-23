@@ -16,6 +16,9 @@ import { AppShell } from "@/components/AppShell";
 import { buildThemeInitScript } from "@/lib/theme";
 
 const themeInitScript = buildThemeInitScript();
+// Vite's BASE_URL ("/" or e.g. "/new/" on GitHub Pages) — used so static assets
+// resolve under the deploy subpath.
+const BASE = import.meta.env.BASE_URL;
 
 function NotFoundComponent() {
   return (
@@ -91,9 +94,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/icon-192.svg" },
-      { rel: "icon", href: "/icon-192.svg", type: "image/svg+xml" },
+      { rel: "manifest", href: `${BASE}manifest.webmanifest` },
+      { rel: "apple-touch-icon", href: `${BASE}icon-192.svg` },
+      { rel: "icon", href: `${BASE}icon-192.svg`, type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
