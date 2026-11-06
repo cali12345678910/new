@@ -17,6 +17,7 @@ export const t_dict: Dict = {
   nav_dhikr: { ar: "الأذكار", en: "Dhikr" },
   nav_qibla: { ar: "القبلة", en: "Qibla" },
   nav_tasbeeh: { ar: "المسبحة", en: "Tasbeeh" },
+  nav_library: { ar: "المكتبة", en: "Library" },
   change_location: { ar: "تغيير الموقع", en: "Change location" },
   detect_location: { ar: "تحديد موقعي", en: "Detect my location" },
   next_prayer: { ar: "الصلاة القادمة", en: "Next prayer" },

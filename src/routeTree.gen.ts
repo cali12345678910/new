@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasbeehRouteImport } from './routes/tasbeeh'
 import { Route as QiblaRouteImport } from './routes/qibla'
 import { Route as PrayerTimesRouteImport } from './routes/prayer-times'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as DhikrRouteImport } from './routes/dhikr'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuranIndexRouteImport } from './routes/quran.index'
@@ -30,6 +31,11 @@ const QiblaRoute = QiblaRouteImport.update({
 const PrayerTimesRoute = PrayerTimesRouteImport.update({
   id: '/prayer-times',
   path: '/prayer-times',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DhikrRoute = DhikrRouteImport.update({
@@ -56,6 +62,7 @@ const QuranIdRoute = QuranIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dhikr': typeof DhikrRoute
+  '/library': typeof LibraryRoute
   '/prayer-times': typeof PrayerTimesRoute
   '/qibla': typeof QiblaRoute
   '/tasbeeh': typeof TasbeehRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dhikr': typeof DhikrRoute
+  '/library': typeof LibraryRoute
   '/prayer-times': typeof PrayerTimesRoute
   '/qibla': typeof QiblaRoute
   '/tasbeeh': typeof TasbeehRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dhikr': typeof DhikrRoute
+  '/library': typeof LibraryRoute
   '/prayer-times': typeof PrayerTimesRoute
   '/qibla': typeof QiblaRoute
   '/tasbeeh': typeof TasbeehRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dhikr'
+    | '/library'
     | '/prayer-times'
     | '/qibla'
     | '/tasbeeh'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dhikr'
+    | '/library'
     | '/prayer-times'
     | '/qibla'
     | '/tasbeeh'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dhikr'
+    | '/library'
     | '/prayer-times'
     | '/qibla'
     | '/tasbeeh'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DhikrRoute: typeof DhikrRoute
+  LibraryRoute: typeof LibraryRoute
   PrayerTimesRoute: typeof PrayerTimesRoute
   QiblaRoute: typeof QiblaRoute
   TasbeehRoute: typeof TasbeehRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/prayer-times'
       fullPath: '/prayer-times'
       preLoaderRoute: typeof PrayerTimesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dhikr': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DhikrRoute: DhikrRoute,
+  LibraryRoute: LibraryRoute,
   PrayerTimesRoute: PrayerTimesRoute,
   QiblaRoute: QiblaRoute,
   TasbeehRoute: TasbeehRoute,

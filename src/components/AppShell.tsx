@@ -3,6 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import {
   Home,
   BookOpen,
+  Library,
   Clock,
   Compass,
   Sparkles,
@@ -25,6 +26,7 @@ const NAV = [
   { to: "/dhikr", icon: Sparkles, key: "nav_dhikr" as const },
   { to: "/qibla", icon: Compass, key: "nav_qibla" as const },
   { to: "/tasbeeh", icon: CircleDot, key: "nav_tasbeeh" as const },
+  { to: "/library", icon: Library, key: "nav_library" as const },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -103,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-5 pb-40 md:pb-24">{children}</main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/70 bg-background/95 backdrop-blur">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-7">
           {NAV.map((n) => {
             const active = pathname === n.to || (n.to !== "/" && pathname.startsWith(n.to));
             const Icon = n.icon;
