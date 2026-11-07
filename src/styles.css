@@ -229,3 +229,16 @@
 .reduce-motion * {
   transition-duration: 0.01ms !important;
 }
+
+/* Performance & Rendering Optimization */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 220px;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -76,7 +76,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Al-Maqam — an ultra-premium Islamic platform with prayer times, golden Qibla compass, Qur'an with reciter selection, and Hisn al-Muslim dhikr.",
+          "Al-Maqam — an ultra-premium Islamic platform with prayer times, golden Qibla compass, Qur'an with reciter selection, authentic Hadith library, and Hisn al-Muslim dhikr.",
+      },
+      {
+        name: "keywords",
+        content:
+          "Al-Maqam, المقام, prayer times, hadith, quran, dhikr, hisn al-muslim, qibla, أذكار الصباح والمساء, الأحاديث النبوية, مواقيت الصلاة",
       },
       { name: "author", content: "Al-Maqam" },
       { property: "og:title", content: "الْمَقَام | Al-Maqam — Premium Islamic Platform" },

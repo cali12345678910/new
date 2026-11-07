@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -9,14 +9,10 @@ import {
   Star,
   BookMarked,
   Quote,
-  Sparkles,
   ShieldCheck,
-  Layers,
   Copy,
-  Share2,
 } from "lucide-react";
-import { HADITHS_DATA } from "@/data/hadiths";
-import { CATEGORIES } from "@/data/hadiths";
+import { HADITHS_DATA, CATEGORIES } from "@/data/hadiths";
 import type { HadithItem, CategoryId } from "@/types";
 import { matchesQuery } from "@/utils/arabic";
 import { useI18n } from "@/lib/i18n";
@@ -37,12 +33,16 @@ export const Route = createFileRoute("/hadith")({
   component: HadithPage,
 });
 
+const PAGE_SIZE = 20;
+
 function HadithPage() {
   const { lang } = useI18n();
   const [settings] = useSettings();
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
   const [showTashkeel, setShowTashkeel] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Favorites in localStorage
   const [favs, setFavs] = useState<string[]>(() => {
@@ -73,20 +73,29 @@ function HadithPage() {
       list = list.filter((h) => h.category === activeCategory);
     }
 
-    if (query.trim()) {
+    if (deferredQuery.trim()) {
       list = list.filter(
         (h) =>
-          matchesQuery(h.title, query) ||
-          matchesQuery(h.text, query) ||
-          matchesQuery(h.sourceBook, query) ||
-          matchesQuery(h.reference, query) ||
-          (h.virtue && matchesQuery(h.virtue, query)) ||
-          (h.notes && matchesQuery(h.notes, query)),
+          matchesQuery(h.title, deferredQuery) ||
+          matchesQuery(h.text, deferredQuery) ||
+          matchesQuery(h.sourceBook, deferredQuery) ||
+          matchesQuery(h.reference, deferredQuery) ||
+          (h.virtue && matchesQuery(h.virtue, deferredQuery)) ||
+          (h.notes && matchesQuery(h.notes, deferredQuery)),
       );
     }
 
     return list;
-  }, [activeCategory, query, favs]);
+  }, [activeCategory, deferredQuery, favs]);
+
+  const visibleItems = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  const handleSelectCategory = (id: CategoryId) => {
+    setActiveCategory(id);
+    setVisibleCount(PAGE_SIZE);
+  };
 
   return (
     <div className="space-y-6">
@@ -120,14 +129,17 @@ function HadithPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar with Deferred Optimization */}
         <div className="mt-5 relative">
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setVisibleCount(PAGE_SIZE);
+            }}
             placeholder={lang === "ar" ? "ابحث في الأحاديث والأدعية..." : "Search hadiths and duas..."}
-            className="w-full px-4 py-2.5 pl-10 text-xs sm:text-sm rounded-2xl bg-background border gold-border focus:outline-none focus:ring-1 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+            className="w-full px-4 py-2.5 pl-10 text-xs sm:text-sm rounded-2xl bg-background border gold-border focus:outline-none focus:ring-1 focus:ring-primary text-foreground placeholder:text-muted-foreground transition-shadow"
           />
           <Search className="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         </div>
@@ -146,7 +158,7 @@ function HadithPage() {
           return (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => handleSelectCategory(cat.id)}
               className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs transition ${
                 isActive
                   ? "gold-fill text-black font-semibold shadow-sm"
@@ -175,7 +187,7 @@ function HadithPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((item) => (
+          {visibleItems.map((item) => (
             <HadithCardItem
               key={item.id}
               item={item}
@@ -185,13 +197,25 @@ function HadithPage() {
               fontScale={settings.fontScale}
             />
           ))}
+
+          {/* Lazy Load More Button if filtered exceeds visible */}
+          {visibleCount < filtered.length && (
+            <div className="pt-4 text-center">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full gold-fill text-black font-semibold text-xs shadow-md hover:opacity-90 transition active:scale-95"
+              >
+                <span>{lang === "ar" ? `عرض المزيد (${filtered.length - visibleCount} متبقٍ)` : `Load more (${filtered.length - visibleCount} remaining)`}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function HadithCardItem({
+const HadithCardItem = memo(function HadithCardItem({
   item,
   showTashkeel,
   isFav,
@@ -235,7 +259,7 @@ function HadithCardItem({
   const finished = remaining === 0;
 
   return (
-    <div className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-6 transition hover:border-primary/50">
+    <div className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-6 transition hover:border-primary/50 content-visibility-auto">
       {/* Card Header */}
       <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -359,4 +383,4 @@ function HadithCardItem({
       )}
     </div>
   );
-}
+});

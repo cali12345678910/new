@@ -90,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                preload="intent"
                 className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition whitespace-nowrap ${
                   active ? "gold-fill text-black shadow-md" : "text-foreground/70 hover:bg-accent"
                 }`}
@@ -113,6 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                preload="intent"
                 className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
