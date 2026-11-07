@@ -14,6 +14,7 @@ import {
   Sparkles,
   Bell,
   BellRing,
+  BookMarked,
 } from "lucide-react";
 
 import { LocationBar } from "@/components/LocationBar";

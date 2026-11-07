@@ -153,7 +153,7 @@ function HadithPage() {
                   : "bg-card gold-border hover:bg-accent text-foreground/80"
               }`}
             >
-              <span>{cat.name}</span>
+              <span>{cat.label}</span>
               <span className={`text-[10px] font-mono tabular-nums ${isActive ? "opacity-80" : "text-muted-foreground"}`}>
                 ({count})
               </span>
