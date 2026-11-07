@@ -295,6 +295,25 @@ function Dashboard() {
         <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
       </Link>
     ),
+    hadith: (
+      <Link
+        to="/hadith"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
+          </div>
+          <div className="flex items-center gap-2">
+            <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
+          </div>
+        </div>
+        <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
+          «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-2 font-mono">متفق عليه · صحيح البخاري (1)</p>
+      </Link>
+    ),
   };
 
   return (

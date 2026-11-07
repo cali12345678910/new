@@ -3,7 +3,7 @@
 // Layout). `kind` lets the dashboard group consecutive "card" sections into a
 // responsive grid so the default order keeps the original 3-up card row.
 
-export type SectionId = "prayer" | "times" | "qibla" | "dhikr" | "quran";
+export type SectionId = "prayer" | "times" | "qibla" | "dhikr" | "quran" | "hadith";
 
 export type SectionMeta = {
   id: SectionId;
@@ -18,6 +18,7 @@ export const SECTIONS: SectionMeta[] = [
   { id: "qibla", ar: "اتجاه القبلة", en: "Qibla", kind: "card" },
   { id: "dhikr", ar: "ذكر اليوم", en: "Today's Dhikr", kind: "card" },
   { id: "quran", ar: "آية اليوم", en: "Ayah of the Day", kind: "card" },
+  { id: "hadith", ar: "حديث اليوم", en: "Hadith of the Day", kind: "card" },
 ];
 
 export const DEFAULT_SECTION_ORDER: SectionId[] = SECTIONS.map((s) => s.id);

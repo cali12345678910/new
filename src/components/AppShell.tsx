@@ -7,6 +7,7 @@ import {
   Compass,
   Sparkles,
   CircleDot,
+  BookMarked,
   Languages,
   Settings as SettingsIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const NAV = [
   { to: "/", icon: Home, key: "nav_home" as const },
   { to: "/prayer-times", icon: Clock, key: "nav_prayer" as const },
   { to: "/quran", icon: BookOpen, key: "nav_quran" as const },
+  { to: "/hadith", icon: BookMarked, key: "nav_hadith" as const },
   { to: "/dhikr", icon: Sparkles, key: "nav_dhikr" as const },
   { to: "/qibla", icon: Compass, key: "nav_qibla" as const },
   { to: "/tasbeeh", icon: CircleDot, key: "nav_tasbeeh" as const },
@@ -103,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-5 pb-40 md:pb-24">{children}</main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/70 bg-background/95 backdrop-blur">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-7">
           {NAV.map((n) => {
             const active = pathname === n.to || (n.to !== "/" && pathname.startsWith(n.to));
             const Icon = n.icon;
