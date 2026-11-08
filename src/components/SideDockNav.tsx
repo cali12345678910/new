@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ArrowLeftRight,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
 
 const NAV = [
@@ -31,7 +30,6 @@ export function SideDockNav() {
 
   const [side, setSide] = useState<"right" | "left">("right");
   const [collapsed, setCollapsed] = useState<boolean>(false);
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -63,17 +61,13 @@ export function SideDockNav() {
 
   return (
     <aside
-      className={`fixed z-40 top-1/2 -translate-y-1/2 select-none print:hidden transition-all duration-300 ${
+      className={`fixed z-40 top-1/2 -translate-y-1/2 select-none print:hidden transition-all duration-300 ease-out ${
         isRight ? "right-2 sm:right-3.5" : "left-2 sm:left-3.5"
       }`}
       aria-label={lang === "ar" ? "شريط التنقل الجانبي الذكي" : "Side navigation dock"}
     >
-      <motion.div
-        layout
-        initial={{ opacity: 0, x: isRight ? 40 : -40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ type: "spring", stiffness: 360, damping: 26 }}
-        className="relative flex flex-col items-center p-1.5 sm:p-2 rounded-full gold-border bg-card/90 backdrop-blur-2xl shadow-2xl transition-all"
+      <div
+        className="relative flex flex-col items-center p-1.5 sm:p-2 rounded-full gold-border bg-card/90 backdrop-blur-2xl shadow-2xl transition-all duration-300"
         style={{
           boxShadow: "0 14px 45px -8px rgba(0,0,0,0.8), 0 0 24px -2px rgb(var(--accent-rgb) / 0.18)",
         }}
@@ -83,7 +77,7 @@ export function SideDockNav() {
           <div className="py-1 flex flex-col items-center gap-2">
             <button
               onClick={toggleCollapsed}
-              className="p-1 rounded-full text-primary hover:bg-accent/80 transition-colors"
+              className="p-1 rounded-full text-primary hover:bg-accent/80 transition-transform active:scale-90"
               title={lang === "ar" ? "توسيع شريط التنقل" : "Expand navigation dock"}
               aria-label="Expand dock"
             >
@@ -97,7 +91,7 @@ export function SideDockNav() {
                   key={n.to}
                   to={n.to}
                   preload="intent"
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 active:scale-125 ${
                     active
                       ? "bg-primary scale-125 ring-2 ring-primary/50 shadow-sm"
                       : "bg-muted-foreground/35 hover:bg-muted-foreground"
@@ -114,60 +108,32 @@ export function SideDockNav() {
               {NAV.map((n) => {
                 const active = pathname === n.to || (n.to !== "/" && pathname.startsWith(n.to));
                 const Icon = n.icon;
-                const isHovered = hoveredKey === n.to;
 
                 return (
-                  <div key={n.to} className="relative flex items-center">
+                  <div key={n.to} className="relative group flex items-center">
                     <Link
                       to={n.to}
                       preload="intent"
-                      onMouseEnter={() => setHoveredKey(n.to)}
-                      onMouseLeave={() => setHoveredKey(null)}
-                      className={`relative p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-colors ${
+                      className={`relative p-2.5 sm:p-3 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 hover:scale-110 ${
                         active
-                          ? "text-black font-bold shadow-md"
+                          ? "gold-fill text-black font-bold shadow-lg"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent/70"
                       }`}
                       aria-label={t(n.key)}
                     >
-                      {/* Active Fluid Sliding Pill Highlight */}
-                      {active && (
-                        <motion.div
-                          layoutId="activeSideDockPill"
-                          transition={{
-                            type: "spring",
-                            stiffness: 420,
-                            damping: 30,
-                          }}
-                          className="absolute inset-0 rounded-full gold-fill -z-10 shadow-lg"
-                        />
-                      )}
-
-                      <motion.div
-                        whileHover={{ scale: 1.18 }}
-                        whileTap={{ scale: 0.88 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      >
-                        <Icon className="size-4 sm:size-4.5" />
-                      </motion.div>
+                      <Icon className="size-4 sm:size-4.5" />
                     </Link>
 
-                    {/* Flyout Label Tooltip - Points away from screen edge towards content */}
-                    <AnimatePresence>
-                      {isHovered && (
-                        <motion.div
-                          initial={{ opacity: 0, x: isRight ? 10 : -10, scale: 0.9 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          exit={{ opacity: 0, x: isRight ? 10 : -10, scale: 0.9 }}
-                          transition={{ duration: 0.14 }}
-                          className={`absolute ${
-                            isRight ? "right-full mr-3" : "left-full ml-3"
-                          } px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap gold-border bg-card/95 text-foreground shadow-2xl backdrop-blur-md pointer-events-none z-50`}
-                        >
-                          {t(n.key)}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Flyout Label Tooltip on hover / touch */}
+                    <div
+                      className={`absolute ${
+                        isRight
+                          ? "right-full mr-3 translate-x-1 group-hover:translate-x-0"
+                          : "left-full ml-3 -translate-x-1 group-hover:translate-x-0"
+                      } opacity-0 group-hover:opacity-100 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap gold-border bg-card/95 text-foreground shadow-2xl backdrop-blur-md pointer-events-none z-50 transition-all duration-150`}
+                    >
+                      {t(n.key)}
+                    </div>
                   </div>
                 );
               })}
@@ -177,7 +143,7 @@ export function SideDockNav() {
             <div className="mt-1 pt-1.5 border-t border-border/50 flex flex-col items-center gap-1">
               <button
                 onClick={toggleSide}
-                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors"
+                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-transform active:scale-90"
                 title={
                   isRight
                     ? lang === "ar"
@@ -189,12 +155,12 @@ export function SideDockNav() {
                 }
                 aria-label="Toggle side dock position"
               >
-                <ArrowLeftRight className="size-3 text-muted-foreground/80 hover:text-primary transition-colors" />
+                <ArrowLeftRight className="size-3 text-muted-foreground/80 hover:text-primary" />
               </button>
 
               <button
                 onClick={toggleCollapsed}
-                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors"
+                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-transform active:scale-90"
                 title={lang === "ar" ? "تصغير القائمة" : "Minimize dock"}
                 aria-label="Minimize dock"
               >
@@ -203,7 +169,7 @@ export function SideDockNav() {
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </aside>
   );
 }

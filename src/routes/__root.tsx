@@ -8,7 +8,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "@/lib/i18n";
@@ -16,6 +15,7 @@ import { AppShell } from "@/components/AppShell";
 import { buildThemeInitScript } from "@/lib/theme";
 
 const themeInitScript = buildThemeInitScript();
+
 // Vite's BASE_URL ("/" or e.g. "/new/" on GitHub Pages) — used so static assets
 // resolve under the deploy subpath.
 const BASE = import.meta.env.BASE_URL;
@@ -45,20 +45,44 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
+  const handleHardRefresh = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ("caches" in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => caches.delete(name));
+        });
+      }
+    } catch {}
+    const url = new URL(window.location.href);
+    url.searchParams.set("reload", Date.now().toString());
+    window.location.replace(url.toString());
+  };
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Try refreshing the page.</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="max-w-md text-center space-y-4">
+        <h1 className="text-xl font-semibold text-foreground">حدث خطأ أثناء العرض</h1>
+        <p className="text-xs font-mono text-amber-400/90 break-words bg-card p-3 rounded-2xl border gold-border text-start">
+          {error?.name}: {error?.message || "خطأ غير متوقع"}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
+          <button
+            onClick={handleHardRefresh}
+            className="rounded-full gold-fill text-black px-5 py-2 text-sm font-semibold hover:opacity-90 shadow-md transition active:scale-95"
+          >
+            مسح الذاكرة المؤقتة وتحديث الصفحة
+          </button>
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90"
+            className="rounded-full bg-secondary gold-border px-5 py-2 text-sm hover:bg-accent transition"
           >
-            Try again
+            إعادة المحاولة
           </button>
         </div>
       </div>

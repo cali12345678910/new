@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Copy,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { HADITHS_DATA, CATEGORIES } from "@/data/hadiths";
 import type { HadithItem, CategoryId } from "@/types";
 import { matchesQuery, stripTashkeel } from "@/utils/arabic";
@@ -98,12 +97,7 @@ function HadithPage() {
   return (
     <div className="space-y-6">
       {/* Editorial Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-7 relative overflow-hidden"
-      >
+      <div className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-7 relative overflow-hidden transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2 text-xs text-primary font-medium">
@@ -123,13 +117,12 @@ function HadithPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <motion.button
-              whileTap={{ scale: 0.94 }}
+            <button
               onClick={() => setShowTashkeel(!showTashkeel)}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs gold-border bg-secondary/70 hover:bg-accent transition"
+              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs gold-border bg-secondary/70 hover:bg-accent transition active:scale-95"
             >
               <span>{showTashkeel ? (lang === "ar" ? "إخفاء التشكيل" : "Hide Tashkeel") : (lang === "ar" ? "إظهار التشكيل" : "Show Tashkeel")}</span>
-            </motion.button>
+            </button>
           </div>
         </div>
 
@@ -147,9 +140,9 @@ function HadithPage() {
           />
           <Search className="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         </div>
-      </motion.div>
+      </div>
 
-      {/* Category Pills Navigation with Sliding Liquid Pill */}
+      {/* Category Pills Navigation with Smooth CSS Transitions */}
       <nav className="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar">
         {CATEGORIES.map((cat) => {
           const count =
@@ -161,28 +154,20 @@ function HadithPage() {
           const isActive = activeCategory === cat.id;
 
           return (
-            <motion.button
+            <button
               key={cat.id}
-              whileTap={{ scale: 0.95 }}
               onClick={() => handleSelectCategory(cat.id)}
-              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs transition ${
+              className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs transition-all duration-200 active:scale-95 ${
                 isActive
-                  ? "text-black font-semibold shadow-sm"
+                  ? "gold-fill text-black font-semibold shadow-md"
                   : "bg-card gold-border hover:bg-accent text-foreground/80"
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="hadithCategoryPill"
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className="absolute inset-0 rounded-full gold-fill -z-10 shadow-sm"
-                />
-              )}
               <span>{cat.label}</span>
               <span className={`text-[10px] font-mono tabular-nums ${isActive ? "opacity-80" : "text-muted-foreground"}`}>
                 ({count})
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </nav>
@@ -214,14 +199,12 @@ function HadithPage() {
           {/* Lazy Load More Button if filtered exceeds visible */}
           {visibleCount < filtered.length && (
             <div className="pt-4 text-center">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+              <button
                 onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full gold-fill text-black font-semibold text-xs shadow-md hover:opacity-90 transition"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full gold-fill text-black font-semibold text-xs shadow-md hover:opacity-90 transition active:scale-95"
               >
                 <span>{lang === "ar" ? `عرض المزيد (${filtered.length - visibleCount} متبقٍ)` : `Load more (${filtered.length - visibleCount} remaining)`}</span>
-              </motion.button>
+              </button>
             </div>
           )}
         </div>
@@ -276,12 +259,7 @@ const HadithCardItem = memo(function HadithCardItem({
   const renderedText = showTashkeel ? item.text : stripTashkeel(item.text);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
-      className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-6 transition hover:border-primary/50 content-visibility-auto"
-    >
+    <div className="rounded-3xl gold-border bg-card card-shadow p-5 sm:p-6 transition-all duration-200 hover:border-primary/50 content-visibility-auto">
       {/* Card Header */}
       <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -301,14 +279,13 @@ const HadithCardItem = memo(function HadithCardItem({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <motion.button
-            whileTap={{ scale: 1.3, rotate: 15 }}
+          <button
             onClick={onToggleFav}
-            className="rounded-full p-1.5 hover:bg-accent text-muted-foreground transition"
+            className="rounded-full p-1.5 hover:bg-accent text-muted-foreground transition active:scale-125"
             aria-label="favorite"
           >
             <Star className={`size-4 ${isFav ? "fill-current text-primary" : ""}`} />
-          </motion.button>
+          </button>
           <button
             onClick={() => setOpen(!open)}
             className="rounded-full p-1.5 hover:bg-accent text-muted-foreground transition"
@@ -318,102 +295,92 @@ const HadithCardItem = memo(function HadithCardItem({
         </div>
       </div>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="mt-4 space-y-4 overflow-hidden"
+      {open && (
+        <div className="mt-4 space-y-4">
+          {/* Hadith Arabic Text */}
+          <p
+            className="arabic leading-loose text-end text-foreground/95"
+            style={{ fontSize: `${1.4 * fontScale}rem` }}
           >
-            {/* Hadith Arabic Text */}
-            <p
-              className="arabic leading-loose text-end text-foreground/95"
-              style={{ fontSize: `${1.4 * fontScale}rem` }}
-            >
-              {renderedText}
-            </p>
+            {renderedText}
+          </p>
 
-            {/* Virtue / Benefit / Notes */}
-            {(item.virtue || item.notes) && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-secondary/50 gold-border p-3 text-xs text-muted-foreground">
-                <Quote className="size-3.5 shrink-0 text-primary mt-0.5" />
-                <span className="leading-relaxed">{item.virtue || item.notes}</span>
-              </div>
-            )}
+          {/* Virtue / Benefit / Notes */}
+          {(item.virtue || item.notes) && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-secondary/50 gold-border p-3 text-xs text-muted-foreground">
+              <Quote className="size-3.5 shrink-0 text-primary mt-0.5" />
+              <span className="leading-relaxed">{item.virtue || item.notes}</span>
+            </div>
+          )}
 
-            {/* Attribution & Counter Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-border/40">
-              {/* Attribution Footnote */}
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                    <BookMarked className="size-3.5 text-primary" />
-                    <span>{item.sourceBook}</span>
-                  </span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground font-mono">{item.reference}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/15 text-primary border border-primary/20">
-                    {item.grading}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions & Repetition Counter */}
-              <div className="flex items-center justify-between sm:justify-end gap-3">
-                <div className="flex items-center gap-1.5">
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    onClick={handleCopy}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs gold-border bg-secondary/70 hover:bg-accent transition"
-                  >
-                    {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
-                    <span>{copied ? (lang === "ar" ? "تم النسخ" : "Copied") : (lang === "ar" ? "نسخ" : "Copy")}</span>
-                  </motion.button>
-                  <ShareButton
-                    content={{
-                      kind: "dhikr",
-                      ar: item.text,
-                      en: item.title,
-                      source: `${item.sourceBook} - ${item.reference}`,
-                    }}
-                  />
-                </div>
-
-                {/* Repetition Button if repeatCount > 1 */}
-                {target > 1 && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={reset}
-                      className="p-1.5 rounded-full hover:bg-accent text-muted-foreground text-xs"
-                      title={lang === "ar" ? "إعادة" : "Reset"}
-                    >
-                      <RotateCcw className="size-3.5" />
-                    </button>
-                    <motion.button
-                      whileTap={{ scale: 0.92 }}
-                      onClick={tap}
-                      disabled={finished}
-                      className="relative grid size-14 place-items-center rounded-full transition select-none disabled:opacity-80"
-                      style={{
-                        background: `conic-gradient(var(--gold-bright) ${pct}%, rgb(var(--accent-rgb) / 0.10) ${pct}% 100%)`,
-                      }}
-                    >
-                      <div className="grid size-12 place-items-center rounded-full bg-card">
-                        <div className="font-display text-base font-bold gold-text tabular-nums">
-                          {remaining}
-                        </div>
-                      </div>
-                    </motion.button>
-                  </div>
-                )}
+          {/* Attribution & Counter Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-border/40">
+            {/* Attribution Footnote */}
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                  <BookMarked className="size-3.5 text-primary" />
+                  <span>{item.sourceBook}</span>
+                </span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground font-mono">{item.reference}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/15 text-primary border border-primary/20">
+                  {item.grading}
+                </span>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+
+            {/* Actions & Repetition Counter */}
+            <div className="flex items-center justify-between sm:justify-end gap-3">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleCopy}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs gold-border bg-secondary/70 hover:bg-accent transition active:scale-95"
+                >
+                  {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+                  <span>{copied ? (lang === "ar" ? "تم النسخ" : "Copied") : (lang === "ar" ? "نسخ" : "Copy")}</span>
+                </button>
+                <ShareButton
+                  content={{
+                    kind: "dhikr",
+                    ar: item.text,
+                    en: item.title,
+                    source: `${item.sourceBook} - ${item.reference}`,
+                  }}
+                />
+              </div>
+
+              {/* Repetition Button if repeatCount > 1 */}
+              {target > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={reset}
+                    className="p-1.5 rounded-full hover:bg-accent text-muted-foreground text-xs transition active:scale-90"
+                    title={lang === "ar" ? "إعادة" : "Reset"}
+                  >
+                    <RotateCcw className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={tap}
+                    disabled={finished}
+                    className="relative grid size-14 place-items-center rounded-full transition-transform active:scale-90 select-none disabled:opacity-80"
+                    style={{
+                      background: `conic-gradient(var(--gold-bright) ${pct}%, rgb(var(--accent-rgb) / 0.10) ${pct}% 100%)`,
+                    }}
+                  >
+                    <div className="grid size-12 place-items-center rounded-full bg-card">
+                      <div className="font-display text-base font-bold gold-text tabular-nums">
+                        {remaining}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 });

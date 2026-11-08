@@ -16,7 +16,6 @@ import {
   BellRing,
   BookMarked,
 } from "lucide-react";
-import { motion } from "motion/react";
 import { LocationBar } from "@/components/LocationBar";
 import { loadLocation, qiblaBearing, type Loc } from "@/lib/location";
 import {
@@ -156,18 +155,17 @@ function Dashboard() {
                 ? `${data.date.gregorian.weekday.en}, ${data.date.gregorian.day} ${data.date.gregorian.month.en} ${data.date.gregorian.year}`
                 : "—"}
             </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={toggleAthan}
-              className={`mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
+              className={`mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition active:scale-95 ${
                 athanOn
-                  ? "gold-fill text-black animate-gold-pulse"
+                  ? "gold-fill text-black animate-gold-pulse shadow-md"
                   : "bg-background/70 gold-border hover:bg-accent"
               }`}
             >
               {athanOn ? <BellRing className="size-4" /> : <Bell className="size-4" />}
               {athanOn ? t("athan_enabled") : t("enable_athan")}
-            </motion.button>
+            </button>
           </div>
           <div className="order-1 md:order-2 grid place-items-center">
             {next ? (
@@ -201,12 +199,9 @@ function Dashboard() {
             const Icon = ICONS[k];
             const isNext = next?.key === k;
             return (
-              <motion.div
+              <div
                 key={k}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className={`rounded-2xl p-3 transition card-shadow select-none ${
+                className={`rounded-2xl p-3 transition-all duration-200 card-shadow select-none hover:scale-[1.02] active:scale-[0.98] ${
                   isNext
                     ? "gold-fill text-black border-transparent animate-gold-pulse shadow-lg"
                     : "bg-card gold-border"
@@ -226,7 +221,7 @@ function Dashboard() {
                 >
                   {formatTime12(data.timings[k], lang)}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         {data && (
@@ -245,111 +240,103 @@ function Dashboard() {
     ),
 
     qibla: (
-      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
-        <Link
-          to="/qibla"
-          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {t("qibla_dir")}
-            </div>
-            <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+      <Link
+        to="/qibla"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("qibla_dir")}
           </div>
-          <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
-          <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
-          <CompassMini bearing={bearing} />
-        </Link>
-      </motion.div>
+          <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+        </div>
+        <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
+        <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
+        <CompassMini bearing={bearing} />
+      </Link>
     ),
 
     dhikr: (
-      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
-        <Link
-          to="/dhikr"
-          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {t("today_dhikr")}
-            </div>
-            <div className="flex items-center gap-2">
-              <ShareButton
-                content={{
-                  kind: "dhikr",
-                  ar: todayDhikr.ar,
-                  translit: todayDhikr.translit,
-                  en: todayDhikr.en,
-                  source: todayDhikr.source,
-                }}
-              />
-              <Sparkles className="size-4 text-primary" />
-            </div>
+      <Link
+        to="/dhikr"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("today_dhikr")}
           </div>
-          <p
-            className="mt-3 arabic leading-relaxed line-clamp-4"
-            style={{ fontSize: `${1.25 * arScale}rem` }}
-          >
-            {todayDhikr.ar}
-          </p>
-          {lang === "en" && todayDhikr.en && (
-            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
-          )}
-        </Link>
-      </motion.div>
+          <div className="flex items-center gap-2">
+            <ShareButton
+              content={{
+                kind: "dhikr",
+                ar: todayDhikr.ar,
+                translit: todayDhikr.translit,
+                en: todayDhikr.en,
+                source: todayDhikr.source,
+              }}
+            />
+            <Sparkles className="size-4 text-primary" />
+          </div>
+        </div>
+        <p
+          className="mt-3 arabic leading-relaxed line-clamp-4"
+          style={{ fontSize: `${1.25 * arScale}rem` }}
+        >
+          {todayDhikr.ar}
+        </p>
+        {lang === "en" && todayDhikr.en && (
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
+        )}
+      </Link>
     ),
 
     quran: (
-      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
-        <Link
-          to="/quran"
-          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
-            </div>
-            <div className="flex items-center gap-2">
-              <ShareButton
-                content={{
-                  kind: "ayah",
-                  ar: AYAH_OF_DAY.ar,
-                  en: AYAH_OF_DAY.en,
-                  source: AYAH_OF_DAY.ref,
-                }}
-              />
-              <BookOpen className="size-4 text-primary" />
-            </div>
+      <Link
+        to="/quran"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
           </div>
-          <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
-            {AYAH_OF_DAY.ar}
-          </p>
-          {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
-          <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
-        </Link>
-      </motion.div>
+          <div className="flex items-center gap-2">
+            <ShareButton
+              content={{
+                kind: "ayah",
+                ar: AYAH_OF_DAY.ar,
+                en: AYAH_OF_DAY.en,
+                source: AYAH_OF_DAY.ref,
+              }}
+            />
+            <BookOpen className="size-4 text-primary" />
+          </div>
+        </div>
+        <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
+          {AYAH_OF_DAY.ar}
+        </p>
+        {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
+        <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
+      </Link>
     ),
 
     hadith: (
-      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
-        <Link
-          to="/hadith"
-          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
-            </div>
-            <div className="flex items-center gap-2">
-              <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
-            </div>
+      <Link
+        to="/hadith"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
           </div>
-          <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
-            «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»
-          </p>
-          <p className="text-[11px] text-muted-foreground mt-2 font-mono">متفق عليه · صحيح البخاري (1)</p>
-        </Link>
-      </motion.div>
+          <div className="flex items-center gap-2">
+            <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
+          </div>
+        </div>
+        <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
+          «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-2 font-mono">متفق عليه · صحيح البخاري (1)</p>
+      </Link>
     ),
   };
 
