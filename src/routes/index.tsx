@@ -59,71 +59,54 @@ const ICONS: Record<PrayerKey, React.ComponentType<{ className?: string }>> = {
 
 function Dashboard() {
   const { t, lang } = useI18n();
-  const [loc, setLoc] = useState<Loc>(loadLocation);
   const [settings] = useSettings();
+  const [loc, setLoc] = useState<Loc>(() => loadLocation());
+  const [tick, setTick] = useState(0);
   const [athanOn, setAthanOn] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["prayer-today", loc.lat, loc.lng, settings.method, settings.asrMethod],
-    queryFn: () =>
-      fetchToday(loc, {
-        method: settings.method,
-        asrMethod: settings.asrMethod,
-        highLatitude: settings.highLatitude,
-      }),
-    refetchInterval: 60_000,
+    queryKey: ["today", loc.lat, loc.lng, settings.calcMethod],
+    queryFn: () => fetchToday(loc.lat, loc.lng, settings.calcMethod),
+    staleTime: 5 * 60 * 1000,
   });
 
-  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data]);
-  const bearing = useMemo(() => qiblaBearing(loc), [loc]);
+  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data, tick]);
+  const bearing = useMemo(() => qiblaBearing(loc.lat, loc.lng), [loc.lat, loc.lng]);
 
-  // Daily Athan scheduling when enabled
+  const onCountdownComplete = useCallback(() => setTick((n) => n + 1), []);
+
   useEffect(() => {
-    if (!athanOn || !data) return;
-    const cancel = scheduleAthan(data.timings, (prayer) => {
-      playAthan(settings.reciter);
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(t("athan_call"), {
-          body: `${t(prayer.toLowerCase() as Parameters<typeof t>[0])} — ${formatTime12(
-            data.timings[prayer],
-            lang,
-          )}`,
-          icon: "/favicon.ico",
-        });
-      }
-    });
-    return cancel;
-  }, [athanOn, data, settings.reciter, lang, t]);
+    if (athanOn && data) scheduleAthan(data.timings, lang);
+  }, [athanOn, data, lang]);
 
-  const toggleAthan = useCallback(async () => {
-    if (!athanOn) {
-      const ok = await requestNotificationPermission();
-      if (!ok) {
-        alert(
-          lang === "ar"
-            ? "يرجى السماح بالإشعارات لتلقي تنبيهات الأذان."
-            : "Please allow notifications to receive Athan alerts.",
-        );
-      }
-      setAthanOn(true);
-    } else {
-      stopAthan();
+  async function toggleAthan() {
+    if (athanOn) {
       setAthanOn(false);
+      stopAthan();
+      return;
     }
-  }, [athanOn, lang]);
-
-  const onCountdownComplete = useCallback(() => {
-    // When countdown hits zero, trigger athan if enabled
-    if (athanOn) playAthan(settings.reciter);
-  }, [athanOn, settings.reciter]);
+    const perm = await requestNotificationPermission();
+    if (perm === "granted") {
+      setAthanOn(true);
+      playAthan();
+      setTimeout(stopAthan, 4000);
+    } else {
+      alert(lang === "ar" ? "يرجى السماح بالتنبيهات" : "Please allow notifications");
+    }
+  }
 
   const morning = DHIKR.find((c) => c.id === "morning") ?? DHIKR[0];
-  const todayDhikr = morning?.items?.[7] ?? morning?.items?.[0] ?? { ar: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", translit: "Subhan Allahi wa bihamdihi", en: "Glory be to Allah and His is the praise", source: "صحيح مسلم" };
+  const todayDhikr = morning?.items?.[7] ?? morning?.items?.[0] ?? {
+    ar: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+    translit: "Subhan Allahi wa bihamdihi",
+    en: "Glory be to Allah and His is the praise",
+    source: "صحيح مسلم",
+  };
   const arScale = settings.fontScale;
 
   const sectionNodes: Record<SectionId, ReactNode> = {
     prayer: (
-      <section className="rounded-3xl gold-border gold-gradient card-shadow p-5 sm:p-7 overflow-hidden relative">
+      <section className="rounded-3xl gold-border gold-gradient card-shadow p-5 sm:p-7 overflow-hidden relative transition-all duration-300">
         <Ornament />
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center relative">
           <div className="min-w-0 order-2 md:order-1">
@@ -157,7 +140,7 @@ function Dashboard() {
             </div>
             <button
               onClick={toggleAthan}
-              className={`mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition active:scale-95 ${
+              className={`mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-all duration-200 active:scale-95 ${
                 athanOn
                   ? "gold-fill text-black animate-gold-pulse shadow-md"
                   : "bg-background/70 gold-border hover:bg-accent"
@@ -204,7 +187,7 @@ function Dashboard() {
                 className={`rounded-2xl p-3 transition-all duration-200 card-shadow select-none hover:scale-[1.02] active:scale-[0.98] ${
                   isNext
                     ? "gold-fill text-black border-transparent animate-gold-pulse shadow-lg"
-                    : "bg-card gold-border"
+                    : "bg-card gold-border hover:border-primary/50"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -242,24 +225,26 @@ function Dashboard() {
     qibla: (
       <Link
         to="/qibla"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] group"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 group"
       >
         <div className="flex items-center justify-between">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
             {t("qibla_dir")}
           </div>
-          <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+          <Compass className="size-4 text-primary group-hover:rotate-12 transition-transform duration-300" />
         </div>
-        <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
+        <div className="mt-2 font-display text-5xl gold-text">
+          {Number.isFinite(bearing) ? `${bearing.toFixed(0)}°` : "—"}
+        </div>
         <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
-        <CompassMini bearing={bearing} />
+        <CompassMini bearing={Number.isFinite(bearing) ? bearing : 0} />
       </Link>
     ),
 
     dhikr: (
       <Link
         to="/dhikr"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
       >
         <div className="flex items-center justify-between">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -293,7 +278,7 @@ function Dashboard() {
     quran: (
       <Link
         to="/quran"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
       >
         <div className="flex items-center justify-between">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
@@ -322,14 +307,14 @@ function Dashboard() {
     hadith: (
       <Link
         to="/hadith"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] group"
+        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 group"
       >
         <div className="flex items-center justify-between">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
             {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
           </div>
           <div className="flex items-center gap-2">
-            <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
+            <BookMarked className="size-4 text-primary group-hover:scale-110 transition-transform duration-300" />
           </div>
         </div>
         <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
@@ -381,30 +366,21 @@ function renderOrderedSections(order: SectionId[], nodes: Record<SectionId, Reac
 
 type NextPrayer = NonNullable<ReturnType<typeof nextPrayer>>;
 
-function LiveCountdown({
-  next,
-  onComplete,
-}: {
-  next: NextPrayer;
-  onComplete?: () => void;
-}) {
+function LiveCountdown({ next, onComplete }: { next: NextPrayer; onComplete: () => void }) {
   const { t } = useI18n();
   const [msLeft, setMsLeft] = useState(() => Math.max(0, next.at.getTime() - Date.now()));
 
   useEffect(() => {
     setMsLeft(Math.max(0, next.at.getTime() - Date.now()));
-    const iv = setInterval(() => {
+    const id = setInterval(() => {
       const left = Math.max(0, next.at.getTime() - Date.now());
       setMsLeft(left);
-      if (left <= 0) {
-        clearInterval(iv);
-        onComplete?.();
-      }
-    }, 250);
-    return () => clearInterval(iv);
+      if (left <= 0) onComplete();
+    }, 1000);
+    return () => clearInterval(id);
   }, [next, onComplete]);
 
-  const progress = next.intervalMs > 0 ? 1 - msLeft / next.intervalMs : 0;
+  const progress = next.intervalMs > 0 ? Math.max(0, Math.min(1, 1 - msLeft / next.intervalMs)) : 0;
 
   return (
     <RadialCountdown size={240} stroke={12} progress={progress}>
@@ -425,27 +401,35 @@ function LiveCountdown({
 
 function CompassMini({ bearing }: { bearing: number }) {
   return (
-    <div className="mt-4 flex items-center justify-center">
-      <div className="relative size-20 rounded-full border border-border/80 bg-background/50 flex items-center justify-center">
-        <div className="absolute top-1 text-[9px] font-mono text-muted-foreground">N</div>
-        <div
-          className="size-12 transition-transform duration-700 ease-out flex items-center justify-center"
-          style={{ transform: `rotate(${bearing}deg)` }}
-        >
-          <div className="w-0.5 h-full bg-gradient-to-b from-primary via-primary/50 to-transparent rounded-full" />
-          <div className="absolute top-0 size-2 rounded-full gold-fill shadow-sm" />
-        </div>
-        <div className="size-2 rounded-full bg-foreground/60" />
-      </div>
+    <div className="mt-4 mx-auto relative size-28 rounded-full gold-border bg-background grid place-items-center transition-all duration-300">
+      <div className="absolute inset-2 rounded-full border border-border/60" />
+      <div
+        className="absolute h-1/2 w-0.5 origin-bottom rounded-full transition-transform duration-700 ease-out"
+        style={{
+          transform: `rotate(${bearing}deg)`,
+          background: "linear-gradient(to top, transparent, var(--gold-bright))",
+        }}
+      />
+      <div className="absolute top-1.5 text-[10px] text-muted-foreground">N</div>
+      <div className="text-[10px] font-mono">{bearing.toFixed(0)}°</div>
     </div>
   );
 }
 
 function Ornament() {
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 bg-[radial-gradient(circle,var(--gold-bright)_0%,transparent_70%)] blur-2xl"
-    />
+    <svg
+      viewBox="0 0 200 200"
+      className="pointer-events-none absolute -end-12 -top-12 size-56 opacity-20 text-primary transition-opacity duration-500"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.6"
+    >
+      <circle cx="100" cy="100" r="80" />
+      <circle cx="100" cy="100" r="60" />
+      {Array.from({ length: 12 }).map((_, i) => (
+        <line key={i} x1="100" y1="100" x2="100" y2="20" transform={`rotate(${i * 30} 100 100)`} />
+      ))}
+    </svg>
   );
 }
