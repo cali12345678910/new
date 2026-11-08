@@ -117,8 +117,8 @@ function Dashboard() {
     if (athanOn) playAthan(settings.reciter);
   }, [athanOn, settings.reciter]);
 
-  const morning = DHIKR.categories[0];
-  const todayDhikr = morning.items[7] ?? morning.items[0];
+  const morning = DHIKR.find((c) => c.id === "morning") ?? DHIKR[0];
+  const todayDhikr = morning?.items?.[7] ?? morning?.items?.[0] ?? { ar: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", translit: "Subhan Allahi wa bihamdihi", en: "Glory be to Allah and His is the praise", source: "صحيح مسلم" };
   const arScale = settings.fontScale;
 
   const sectionNodes: Record<SectionId, ReactNode> = {
