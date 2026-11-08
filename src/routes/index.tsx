@@ -16,7 +16,7 @@ import {
   BellRing,
   BookMarked,
 } from "lucide-react";
-
+import { motion } from "motion/react";
 import { LocationBar } from "@/components/LocationBar";
 import { loadLocation, qiblaBearing, type Loc } from "@/lib/location";
 import {
@@ -60,43 +60,65 @@ const ICONS: Record<PrayerKey, React.ComponentType<{ className?: string }>> = {
 
 function Dashboard() {
   const { t, lang } = useI18n();
+  const [loc, setLoc] = useState<Loc>(loadLocation);
   const [settings] = useSettings();
-  const [loc, setLoc] = useState<Loc>(() => loadLocation());
-  const [tick, setTick] = useState(0);
   const [athanOn, setAthanOn] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["today", loc.lat, loc.lng, settings.calcMethod],
-    queryFn: () => fetchToday(loc.lat, loc.lng, settings.calcMethod),
-    staleTime: 5 * 60 * 1000,
+    queryKey: ["prayer-today", loc.lat, loc.lng, settings.method, settings.asrMethod],
+    queryFn: () =>
+      fetchToday(loc, {
+        method: settings.method,
+        asrMethod: settings.asrMethod,
+        highLatitude: settings.highLatitude,
+      }),
+    refetchInterval: 60_000,
   });
 
-  // Recompute only when the prayer data changes or the active countdown rolls
-  // over to the next prayer (signalled by LiveCountdown), not every second.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `tick` is the rollover trigger
-  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data, tick]);
-  const bearing = useMemo(() => qiblaBearing(loc.lat, loc.lng), [loc]);
-  const onCountdownComplete = useCallback(() => setTick((n) => n + 1), []);
+  const next = useMemo(() => (data ? nextPrayer(data.timings) : null), [data]);
+  const bearing = useMemo(() => qiblaBearing(loc), [loc]);
 
+  // Daily Athan scheduling when enabled
   useEffect(() => {
-    if (athanOn && data) scheduleAthan(data.timings, lang);
-  }, [athanOn, data, lang]);
+    if (!athanOn || !data) return;
+    const cancel = scheduleAthan(data.timings, (prayer) => {
+      playAthan(settings.reciter);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(t("athan_call"), {
+          body: `${t(prayer.toLowerCase() as Parameters<typeof t>[0])} — ${formatTime12(
+            data.timings[prayer],
+            lang,
+          )}`,
+          icon: "/favicon.ico",
+        });
+      }
+    });
+    return cancel;
+  }, [athanOn, data, settings.reciter, lang, t]);
 
-  async function toggleAthan() {
-    if (athanOn) {
-      setAthanOn(false);
-      stopAthan();
-      return;
-    }
-    const perm = await requestNotificationPermission();
-    if (perm === "granted") {
+  const toggleAthan = useCallback(async () => {
+    if (!athanOn) {
+      const ok = await requestNotificationPermission();
+      if (!ok) {
+        alert(
+          lang === "ar"
+            ? "يرجى السماح بالإشعارات لتلقي تنبيهات الأذان."
+            : "Please allow notifications to receive Athan alerts.",
+        );
+      }
       setAthanOn(true);
-      playAthan();
-      setTimeout(stopAthan, 4000);
-    } else alert(lang === "ar" ? "يرجى السماح بالتنبيهات" : "Please allow notifications");
-  }
+    } else {
+      stopAthan();
+      setAthanOn(false);
+    }
+  }, [athanOn, lang]);
 
-  const morning = DHIKR.find((c) => c.id === "morning") ?? DHIKR[0];
+  const onCountdownComplete = useCallback(() => {
+    // When countdown hits zero, trigger athan if enabled
+    if (athanOn) playAthan(settings.reciter);
+  }, [athanOn, settings.reciter]);
+
+  const morning = DHIKR.categories[0];
   const todayDhikr = morning.items[7] ?? morning.items[0];
   const arScale = settings.fontScale;
 
@@ -119,7 +141,6 @@ function Dashboard() {
                 </div>
               )}
             </div>
-
             <div className="mt-5 flex items-center gap-2 flex-wrap">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">
                 {t("hijri")}
@@ -135,8 +156,8 @@ function Dashboard() {
                 ? `${data.date.gregorian.weekday.en}, ${data.date.gregorian.day} ${data.date.gregorian.month.en} ${data.date.gregorian.year}`
                 : "—"}
             </div>
-
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={toggleAthan}
               className={`mt-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
                 athanOn
@@ -146,9 +167,8 @@ function Dashboard() {
             >
               {athanOn ? <BellRing className="size-4" /> : <Bell className="size-4" />}
               {athanOn ? t("athan_enabled") : t("enable_athan")}
-            </button>
+            </motion.button>
           </div>
-
           <div className="order-1 md:order-2 grid place-items-center">
             {next ? (
               <LiveCountdown next={next} onComplete={onCountdownComplete} />
@@ -169,6 +189,7 @@ function Dashboard() {
         </div>
       </section>
     ),
+
     times: (
       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {isLoading &&
@@ -180,11 +201,14 @@ function Dashboard() {
             const Icon = ICONS[k];
             const isNext = next?.key === k;
             return (
-              <div
+              <motion.div
                 key={k}
-                className={`rounded-2xl p-3 transition card-shadow ${
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className={`rounded-2xl p-3 transition card-shadow select-none ${
                   isNext
-                    ? "gold-fill text-black border-transparent animate-gold-pulse"
+                    ? "gold-fill text-black border-transparent animate-gold-pulse shadow-lg"
                     : "bg-card gold-border"
                 }`}
               >
@@ -202,7 +226,7 @@ function Dashboard() {
                 >
                   {formatTime12(data.timings[k], lang)}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         {data && (
@@ -219,101 +243,113 @@ function Dashboard() {
         )}
       </section>
     ),
+
     qibla: (
-      <Link
-        to="/qibla"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition group"
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("qibla_dir")}
-          </div>
-          <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
-        </div>
-        <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
-        <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
-        <CompassMini bearing={bearing} />
-      </Link>
-    ),
-    dhikr: (
-      <Link
-        to="/dhikr"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("today_dhikr")}
-          </div>
-          <div className="flex items-center gap-2">
-            <ShareButton
-              content={{
-                kind: "dhikr",
-                ar: todayDhikr.ar,
-                translit: todayDhikr.translit,
-                en: todayDhikr.en,
-                source: todayDhikr.source,
-              }}
-            />
-            <Sparkles className="size-4 text-primary" />
-          </div>
-        </div>
-        <p
-          className="mt-3 arabic leading-relaxed line-clamp-4"
-          style={{ fontSize: `${1.25 * arScale}rem` }}
+      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
+        <Link
+          to="/qibla"
+          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition group"
         >
-          {todayDhikr.ar}
-        </p>
-        {lang === "en" && todayDhikr.en && (
-          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
-        )}
-      </Link>
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              {t("qibla_dir")}
+            </div>
+            <Compass className="size-4 text-primary group-hover:rotate-12 transition" />
+          </div>
+          <div className="mt-2 font-display text-5xl gold-text">{bearing.toFixed(0)}°</div>
+          <div className="text-xs text-muted-foreground mt-1">{t("degrees_to_kaaba")}</div>
+          <CompassMini bearing={bearing} />
+        </Link>
+      </motion.div>
     ),
+
+    dhikr: (
+      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
+        <Link
+          to="/dhikr"
+          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              {t("today_dhikr")}
+            </div>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                content={{
+                  kind: "dhikr",
+                  ar: todayDhikr.ar,
+                  translit: todayDhikr.translit,
+                  en: todayDhikr.en,
+                  source: todayDhikr.source,
+                }}
+              />
+              <Sparkles className="size-4 text-primary" />
+            </div>
+          </div>
+          <p
+            className="mt-3 arabic leading-relaxed line-clamp-4"
+            style={{ fontSize: `${1.25 * arScale}rem` }}
+          >
+            {todayDhikr.ar}
+          </p>
+          {lang === "en" && todayDhikr.en && (
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{todayDhikr.en}</p>
+          )}
+        </Link>
+      </motion.div>
+    ),
+
     quran: (
-      <Link
-        to="/quran"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition"
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
+      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
+        <Link
+          to="/quran"
+          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              {lang === "ar" ? "آية اليوم" : "Ayah of the day"}
+            </div>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                content={{
+                  kind: "ayah",
+                  ar: AYAH_OF_DAY.ar,
+                  en: AYAH_OF_DAY.en,
+                  source: AYAH_OF_DAY.ref,
+                }}
+              />
+              <BookOpen className="size-4 text-primary" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <ShareButton
-              content={{
-                kind: "ayah",
-                ar: AYAH_OF_DAY.ar,
-                en: AYAH_OF_DAY.en,
-                source: AYAH_OF_DAY.ref,
-              }}
-            />
-            <BookOpen className="size-4 text-primary" />
-          </div>
-        </div>
-        <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
-          {AYAH_OF_DAY.ar}
-        </p>
-        {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
-        <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
-      </Link>
+          <p className="mt-3 arabic leading-relaxed" style={{ fontSize: `${1.25 * arScale}rem` }}>
+            {AYAH_OF_DAY.ar}
+          </p>
+          {lang === "en" && <p className="text-xs text-muted-foreground mt-2">{AYAH_OF_DAY.en}</p>}
+          <p className="text-[11px] text-muted-foreground mt-2">{AYAH_OF_DAY.ref}</p>
+        </Link>
+      </motion.div>
     ),
+
     hadith: (
-      <Link
-        to="/hadith"
-        className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 hover:-translate-y-0.5 transition group"
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">
-            {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
+      <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} className="h-full">
+        <Link
+          to="/hadith"
+          className="block h-full rounded-3xl gold-border bg-card card-shadow p-5 transition group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              {lang === "ar" ? "مكتبة الأحاديث" : "Hadith Library"}
+            </div>
+            <div className="flex items-center gap-2">
+              <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <BookMarked className="size-4 text-primary group-hover:scale-110 transition" />
-          </div>
-        </div>
-        <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
-          «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»
-        </p>
-        <p className="text-[11px] text-muted-foreground mt-2 font-mono">متفق عليه · صحيح البخاري (1)</p>
-      </Link>
+          <p className="mt-3 arabic leading-relaxed line-clamp-3 text-foreground" style={{ fontSize: `${1.25 * arScale}rem` }}>
+            «إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-2 font-mono">متفق عليه · صحيح البخاري (1)</p>
+        </Link>
+      </motion.div>
     ),
   };
 
@@ -326,21 +362,22 @@ function Dashboard() {
 }
 
 // Renders dashboard sections in the user's saved order, grouping consecutive
-// "card" sections into a responsive 3-up grid (so the default order reproduces
-// the original layout exactly).
+// "card" sections into a responsive 2-up / 3-up grid for tablet and mobile
 function renderOrderedSections(order: SectionId[], nodes: Record<SectionId, ReactNode>) {
   const out: ReactNode[] = [];
   let cards: ReactNode[] = [];
+
   const flush = () => {
     if (cards.length) {
       out.push(
-        <section key={`cards-${out.length}`} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <section key={`cards-${out.length}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {cards}
         </section>,
       );
       cards = [];
     }
   };
+
   for (const id of order) {
     const node = nodes[id];
     if (!node) continue;
@@ -355,25 +392,31 @@ function renderOrderedSections(order: SectionId[], nodes: Record<SectionId, Reac
   return out;
 }
 
-type NextPrayer = NonNullable<ReturnType<typeof nextPrayer>>;
-
-// Owns the 1s ticker so only the ring/timer re-renders each second instead of
-// the whole dashboard. Calls onComplete when the active prayer time arrives.
-function LiveCountdown({ next, onComplete }: { next: NextPrayer; onComplete: () => void }) {
+function LiveCountdown({
+  next,
+  onComplete,
+}: {
+  next: NonNullable<ReturnType<typeof nextPrayer>>;
+  onComplete?: () => void;
+}) {
   const { t } = useI18n();
-  const [msLeft, setMsLeft] = useState(() => next.at.getTime() - Date.now());
+  const [rem, setRem] = useState(() => Math.max(0, next.time.getTime() - Date.now()));
 
   useEffect(() => {
-    setMsLeft(next.at.getTime() - Date.now());
-    const id = setInterval(() => {
-      const left = next.at.getTime() - Date.now();
-      setMsLeft(left);
-      if (left <= 0) onComplete();
-    }, 1000);
-    return () => clearInterval(id);
+    setRem(Math.max(0, next.time.getTime() - Date.now()));
+    const iv = setInterval(() => {
+      const left = Math.max(0, next.time.getTime() - Date.now());
+      setRem(left);
+      if (left <= 0) {
+        clearInterval(iv);
+        onComplete?.();
+      }
+    }, 250);
+    return () => clearInterval(iv);
   }, [next, onComplete]);
 
-  const progress = 1 - msLeft / next.intervalMs;
+  const maxWindow = 6 * 3600 * 1000;
+  const progress = Math.min(1, Math.max(0, 1 - rem / maxWindow));
 
   return (
     <RadialCountdown size={240} stroke={12} progress={progress}>
@@ -381,8 +424,8 @@ function LiveCountdown({ next, onComplete }: { next: NextPrayer; onComplete: () 
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           {t("in_time")}
         </div>
-        <div className="font-mono tabular-nums text-3xl gold-text font-bold mt-1">
-          {formatHMS(msLeft)}
+        <div className="font-mono tabular-nums text-4xl gold-text font-bold mt-1 tracking-tight">
+          {formatHMS(rem)}
         </div>
         <div className="text-[11px] text-muted-foreground mt-1">
           {t(next.key.toLowerCase() as Parameters<typeof t>[0])}
@@ -394,35 +437,27 @@ function LiveCountdown({ next, onComplete }: { next: NextPrayer; onComplete: () 
 
 function CompassMini({ bearing }: { bearing: number }) {
   return (
-    <div className="mt-4 mx-auto relative size-28 rounded-full gold-border bg-background grid place-items-center">
-      <div className="absolute inset-2 rounded-full border border-border/60" />
-      <div
-        className="absolute h-1/2 w-0.5 origin-bottom rounded-full"
-        style={{
-          transform: `rotate(${bearing}deg)`,
-          background: "linear-gradient(to top, transparent, var(--gold-bright))",
-        }}
-      />
-      <div className="absolute top-1.5 text-[10px] text-muted-foreground">N</div>
-      <div className="text-[10px] font-mono">{bearing.toFixed(0)}°</div>
+    <div className="mt-4 flex items-center justify-center">
+      <div className="relative size-20 rounded-full border border-border/80 bg-background/50 flex items-center justify-center">
+        <div className="absolute top-1 text-[9px] font-mono text-muted-foreground">N</div>
+        <div
+          className="size-12 transition-transform duration-700 ease-out flex items-center justify-center"
+          style={{ transform: `rotate(${bearing}deg)` }}
+        >
+          <div className="w-0.5 h-full bg-gradient-to-b from-primary via-primary/50 to-transparent rounded-full" />
+          <div className="absolute top-0 size-2 rounded-full gold-fill shadow-sm" />
+        </div>
+        <div className="size-2 rounded-full bg-foreground/60" />
+      </div>
     </div>
   );
 }
 
 function Ornament() {
   return (
-    <svg
-      viewBox="0 0 200 200"
-      className="pointer-events-none absolute -end-12 -top-12 size-56 opacity-20 text-primary"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="0.6"
-    >
-      <circle cx="100" cy="100" r="80" />
-      <circle cx="100" cy="100" r="60" />
-      {Array.from({ length: 12 }).map((_, i) => (
-        <line key={i} x1="100" y1="100" x2="100" y2="20" transform={`rotate(${i * 30} 100 100)`} />
-      ))}
-    </svg>
+    <div
+      aria-hidden
+      className="pointer-events-none absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 bg-[radial-gradient(circle,var(--gold-bright)_0%,transparent_70%)] blur-2xl"
+    />
   );
 }

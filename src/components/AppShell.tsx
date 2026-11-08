@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { SettingsDrawer } from "./SettingsDrawer";
 import { GlobalSearch } from "./GlobalSearch";
+import { SideDockNav } from "./SideDockNav";
 import { useSettings } from "@/lib/settings";
 import { applyTheme } from "@/lib/theme";
 
@@ -34,6 +35,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings] = useSettings();
+
+  const [dockSide, setDockSide] = useState<"right" | "left">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("al-maqam-dock-side");
+      if (saved === "left" || saved === "right") return saved;
+    }
+    return "right";
+  });
+
+  useEffect(() => {
+    const handleSideChange = (e: Event) => {
+      const custom = e as CustomEvent<"right" | "left">;
+      if (custom.detail) {
+        setDockSide(custom.detail);
+      }
+    };
+    window.addEventListener("al-maqam-dock-side-change", handleSideChange);
+    return () => window.removeEventListener("al-maqam-dock-side-change", handleSideChange);
+  }, []);
 
   useEffect(() => {
     applyTheme({
@@ -54,16 +74,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   ]);
 
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="min-h-dvh flex flex-col antialiased selection:bg-primary/20 selection:text-primary">
+      {/* Top Header Bar */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-background/80 border-b border-border/60">
         <div className="mx-auto max-w-6xl px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <Logo size={44} />
+            <Logo size={42} />
             <div className="min-w-0 leading-tight">
-              <div className="font-display text-2xl gold-text">{t("app_name")}</div>
-              <div className="text-[10px] tracking-[0.25em] text-muted-foreground">AL-MAQAM</div>
+              <div className="font-display text-xl sm:text-2xl gold-text">{t("app_name")}</div>
+              <div className="text-[10px] tracking-[0.25em] text-muted-foreground font-mono">AL-MAQAM</div>
             </div>
           </Link>
+
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => setLang(lang === "ar" ? "en" : "ar")}
@@ -82,7 +104,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
-        <nav className="mx-auto max-w-6xl px-2 pb-2 hidden md:flex gap-1 overflow-x-auto">
+
+        {/* Desktop Navbar Row (Hidden on Mobile & Tablet in favor of the Side Dock) */}
+        <nav className="mx-auto max-w-6xl px-4 pb-2.5 hidden lg:flex gap-1 overflow-x-auto no-scrollbar">
           {NAV.map((n) => {
             const active = pathname === n.to || (n.to !== "/" && pathname.startsWith(n.to));
             const Icon = n.icon;
@@ -92,7 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={n.to}
                 preload="intent"
                 className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition whitespace-nowrap ${
-                  active ? "gold-fill text-black shadow-md" : "text-foreground/70 hover:bg-accent"
+                  active ? "gold-fill text-black shadow-md font-semibold" : "text-foreground/70 hover:bg-accent"
                 }`}
               >
                 <Icon className="size-4" />
@@ -103,29 +127,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-5 pb-40 md:pb-24">{children}</main>
+      {/* Main Content: Dynamic Gutter on Mobile & Tablet based on SideDock position */}
+      <main
+        className={`flex-1 mx-auto w-full max-w-6xl px-4 py-5 transition-all duration-300 pb-16 lg:pb-24 ${
+          dockSide === "right"
+            ? "pr-14 sm:pr-20 lg:pr-4 pl-4"
+            : "pl-14 sm:pl-20 lg:pl-4 pr-4"
+        }`}
+      >
+        {children}
+      </main>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border/70 bg-background/95 backdrop-blur">
-        <div className="grid grid-cols-7">
-          {NAV.map((n) => {
-            const active = pathname === n.to || (n.to !== "/" && pathname.startsWith(n.to));
-            const Icon = n.icon;
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                preload="intent"
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] ${
-                  active ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                <Icon className="size-5" />
-                <span className="truncate">{t(n.key)}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {/* Modern iPhone Duo Style Floating Side Dock (Mobile & Tablet) */}
+      <div className="lg:hidden">
+        <SideDockNav />
+      </div>
 
       <footer className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
         {t("privacy_note")}
