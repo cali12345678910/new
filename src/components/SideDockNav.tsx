@@ -29,38 +29,34 @@ export function SideDockNav() {
   const { t, lang } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const [side, setSide] = useState<"right" | "left">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("al-maqam-dock-side");
-      if (saved === "left" || saved === "right") return saved;
-    }
-    return "right";
-  });
-
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("al-maqam-dock-collapsed") === "true";
-    }
-    return false;
-  });
-
+  const [side, setSide] = useState<"right" | "left">("right");
+  const [collapsed, setCollapsed] = useState<boolean>(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedSide = localStorage.getItem("al-maqam-dock-side");
+      if (savedSide === "left" || savedSide === "right") setSide(savedSide);
+      const savedCol = localStorage.getItem("al-maqam-dock-collapsed");
+      if (savedCol === "true") setCollapsed(true);
+    } catch {}
+  }, []);
 
   const toggleSide = () => {
     const nextSide = side === "right" ? "left" : "right";
     setSide(nextSide);
-    if (typeof window !== "undefined") {
+    try {
       localStorage.setItem("al-maqam-dock-side", nextSide);
       window.dispatchEvent(new CustomEvent("al-maqam-dock-side-change", { detail: nextSide }));
-    }
+    } catch {}
   };
 
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
-    if (typeof window !== "undefined") {
+    try {
       localStorage.setItem("al-maqam-dock-collapsed", String(next));
-    }
+    } catch {}
   };
 
   const isRight = side === "right";

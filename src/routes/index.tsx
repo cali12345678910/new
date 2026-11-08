@@ -392,21 +392,23 @@ function renderOrderedSections(order: SectionId[], nodes: Record<SectionId, Reac
   return out;
 }
 
+type NextPrayer = NonNullable<ReturnType<typeof nextPrayer>>;
+
 function LiveCountdown({
   next,
   onComplete,
 }: {
-  next: NonNullable<ReturnType<typeof nextPrayer>>;
+  next: NextPrayer;
   onComplete?: () => void;
 }) {
   const { t } = useI18n();
-  const [rem, setRem] = useState(() => Math.max(0, next.time.getTime() - Date.now()));
+  const [msLeft, setMsLeft] = useState(() => Math.max(0, next.at.getTime() - Date.now()));
 
   useEffect(() => {
-    setRem(Math.max(0, next.time.getTime() - Date.now()));
+    setMsLeft(Math.max(0, next.at.getTime() - Date.now()));
     const iv = setInterval(() => {
-      const left = Math.max(0, next.time.getTime() - Date.now());
-      setRem(left);
+      const left = Math.max(0, next.at.getTime() - Date.now());
+      setMsLeft(left);
       if (left <= 0) {
         clearInterval(iv);
         onComplete?.();
@@ -415,8 +417,7 @@ function LiveCountdown({
     return () => clearInterval(iv);
   }, [next, onComplete]);
 
-  const maxWindow = 6 * 3600 * 1000;
-  const progress = Math.min(1, Math.max(0, 1 - rem / maxWindow));
+  const progress = next.intervalMs > 0 ? 1 - msLeft / next.intervalMs : 0;
 
   return (
     <RadialCountdown size={240} stroke={12} progress={progress}>
@@ -425,7 +426,7 @@ function LiveCountdown({
           {t("in_time")}
         </div>
         <div className="font-mono tabular-nums text-4xl gold-text font-bold mt-1 tracking-tight">
-          {formatHMS(rem)}
+          {formatHMS(msLeft)}
         </div>
         <div className="text-[11px] text-muted-foreground mt-1">
           {t(next.key.toLowerCase() as Parameters<typeof t>[0])}

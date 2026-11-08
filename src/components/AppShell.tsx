@@ -36,15 +36,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings] = useSettings();
 
-  const [dockSide, setDockSide] = useState<"right" | "left">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("al-maqam-dock-side");
-      if (saved === "left" || saved === "right") return saved;
-    }
-    return "right";
-  });
+  const [dockSide, setDockSide] = useState<"right" | "left">("right");
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("al-maqam-dock-side");
+      if (saved === "left" || saved === "right") setDockSide(saved);
+    } catch {}
+
     const handleSideChange = (e: Event) => {
       const custom = e as CustomEvent<"right" | "left">;
       if (custom.detail) {
